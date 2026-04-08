@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الأسماء الستة | منصة أستاذ صالح</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+body { background:#000; }
+.player-page { display:flex;flex-direction:column;min-height:100vh;background:var(--deep); }
+
+/* TOP BAR */
+.player-topbar {
+  background:var(--deep2);border-bottom:1px solid var(--border);
+  padding:14px 24px;display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:50;
+}
+.back-btn { color:var(--teal);text-decoration:none;font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:6px; }
+
+/* MAIN LAYOUT */
+.player-layout { display:flex;flex:1;gap:0; }
+.player-main { flex:1;min-width:0; }
+
+/* VIDEO AREA */
+.video-container {
+  position:relative;background:#000;
+  padding-top:56.25%;/* 16:9 */
+  user-select:none;-webkit-user-select:none;
+}
+.video-inner { position:absolute;inset:0; }
+
+/* FAKE VIDEO BG (since no real video) */
+.video-bg {
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,#0a1628,#0d2040,#0a1628);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;
+}
+.video-bg-text { font-family:'Tajawal',sans-serif;font-size:1.4rem;font-weight:800;color:rgba(255,255,255,.7);text-align:center; }
+
+/* WATERMARK */
+.vid-watermark {
+  position:absolute;z-index:20;pointer-events:none;
+  font-family:'Tajawal',sans-serif;font-size:.85rem;font-weight:700;
+  color:rgba(255,255,255,.12);user-select:none;
+  white-space:nowrap;transition:all 8s ease;
+}
+
+/* ANTI-RECORD OVERLAY */
+.anti-record {
+  position:absolute;inset:0;z-index:10;pointer-events:none;
+  background:repeating-linear-gradient(
+    45deg,transparent,transparent 40px,rgba(0,0,0,.01) 40px,rgba(0,0,0,.01) 41px
+  );
+}
+
+/* CONTROLS */
+.video-controls {
+  position:absolute;bottom:0;left:0;right:0;z-index:30;
+  background:linear-gradient(to top,rgba(0,0,0,.9),transparent);
+  padding:40px 20px 16px;
+  opacity:0;transition:opacity .3s;
+}
+.video-container:hover .video-controls { opacity:1; }
+
+.progress-row { display:flex;align-items:center;gap:10px;margin-bottom:10px; }
+.vid-timeline-wrap { flex:1;height:4px;background:rgba(255,255,255,.2);border-radius:10px;cursor:pointer;position:relative; }
+.vid-timeline-fill { height:100%;background:var(--teal);border-radius:10px;transition:width .5s linear; }
+.vid-timeline-dot { position:absolute;top:50%;right:var(--pos,0%);transform:translate(50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--teal);opacity:0;transition:.2s; }
+.vid-timeline-wrap:hover .vid-timeline-dot { opacity:1; }
+
+.controls-row { display:flex;align-items:center;gap:12px; }
+.ctrl-btn { background:none;border:none;color:#fff;cursor:pointer;font-size:1.1rem;padding:4px;opacity:.9;transition:.2s; }
+.ctrl-btn:hover { opacity:1;transform:scale(1.1); }
+.vid-time-display { font-size:.8rem;color:rgba(255,255,255,.8);font-family:monospace;white-space:nowrap; }
+
+.speed-menu {
+  position:absolute;bottom:70px;left:70px;background:rgba(10,14,26,.95);
+  border:1px solid var(--border);border-radius:10px;padding:6px;
+  display:none;min-width:90px;
+}
+.speed-menu.open { display:block; }
+.speed-opt { padding:7px 14px;border-radius:7px;font-size:.82rem;cursor:pointer;color:var(--text-soft);transition:.2s; }
+.speed-opt:hover { background:rgba(255,255,255,.08);color:var(--white); }
+.speed-opt.active { color:var(--teal);font-weight:700; }
+
+.quality-menu {
+  position:absolute;bottom:70px;left:140px;background:rgba(10,14,26,.95);
+  border:1px solid var(--border);border-radius:10px;padding:6px;
+  display:none;min-width:100px;
+}
+.quality-menu.open { display:block; }
+
+/* SIDEBAR */
+.player-sidebar {
+  width:340px;flex-shrink:0;border-right:1px solid var(--border);
+  background:var(--deep2);display:flex;flex-direction:column;
+  max-height:calc(100vh - 57px);overflow:hidden;
+}
+.sidebar-tabs { display:flex;border-bottom:1px solid var(--border); }
+.sidebar-tab { flex:1;padding:14px;text-align:center;font-size:.85rem;font-weight:700;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;transition:.2s; }
+.sidebar-tab.active { color:var(--teal);border-bottom-color:var(--teal); }
+.sidebar-content { flex:1;overflow-y:auto;padding:0; }
+
+/* LESSON LIST */
+.lesson-sidebar-item { display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);transition:.2s; }
+.lesson-sidebar-item:hover { background:rgba(255,255,255,.04); }
+.lesson-sidebar-item.active { background:rgba(0,180,216,.08);border-right:3px solid var(--teal); }
+.lesson-thumb { width:40px;height:28px;border-radius:6px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem; }
+.lesson-thumb.done { background:rgba(0,220,130,.15);color:var(--success); }
+.lesson-thumb.locked { background:rgba(255,255,255,.05);color:var(--text-muted); }
+.lesson-sidebar-info .title { font-size:.82rem;font-weight:700;line-height:1.4; }
+.lesson-sidebar-info .meta  { font-size:.7rem;color:var(--text-muted);margin-top:2px; }
+
+/* COMMENTS */
+.comment-input-row { padding:16px;border-bottom:1px solid var(--border); }
+.comment-area { background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;color:#fff;font-family:'Cairo',sans-serif;font-size:.82rem;width:100%;resize:none;min-height:70px;direction:rtl; }
+.comment-area:focus { outline:none;border-color:var(--teal); }
+.comment-item { padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.03); }
+.comment-header { display:flex;align-items:center;gap:8px;margin-bottom:6px; }
+.comment-text { font-size:.82rem;line-height:1.6;color:var(--text-soft); }
+.comment-actions { display:flex;gap:12px;margin-top:6px;font-size:.72rem;color:var(--text-muted); }
+.comment-like { cursor:pointer;transition:.2s; } .comment-like:hover { color:var(--gold); }
+
+/* QUIZ POPUP */
+.quiz-popup {
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(10,14,26,.98);border:1px solid var(--border);border-radius:16px;
+  padding:24px;width:320px;z-index:50;display:none;text-align:right;
+}
+.quiz-popup.show { display:block;animation:scaleIn .3s ease; }
+
+/* VIDEO INFO */
+.video-info-section { padding:20px 24px;border-bottom:1px solid var(--border); }
+.video-info-title { font-size:1.1rem;font-weight:800;margin-bottom:8px; }
+.video-info-meta { display:flex;align-items:center;gap:16px;font-size:.78rem;color:var(--text-muted);flex-wrap:wrap; }
+.video-actions { display:flex;gap:10px;margin-top:16px;flex-wrap:wrap; }
+</style>
+</head>
+<body>
+<div class="player-page">
+
+  <!-- TOP BAR -->
+  <div class="player-topbar">
+    <a href="student-dashboard.html" class="back-btn">← الرئيسية</a>
+    <span style="color:var(--text-muted)">•</span>
+    <span style="font-size:.88rem;color:var(--text-soft)">الفصل الدراسي الأول</span>
+    <span style="color:var(--text-muted)">›</span>
+    <span style="font-size:.88rem;font-weight:700" id="current-lesson-title">الأسماء الستة</span>
+    <div style="margin-right:auto;display:flex;align-items:center;gap:10px">
+      <span class="badge badge-teal" id="encrypt-badge">🔒 مشفر</span>
+      <span class="badge badge-gold" id="wm-badge">💧 علامة مائية</span>
+    </div>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="player-layout">
+
+    <!-- VIDEO + INFO -->
+    <div class="player-main">
+
+      <!-- VIDEO -->
+      <div class="video-container" id="video-container">
+        <div class="video-inner">
+          <!-- FAKE VIDEO -->
+          <div class="video-bg" id="video-bg">
+            <div style="font-size:3rem;animation:logoFloat 3s ease-in-out infinite">🎬</div>
+            <div class="video-bg-text">الأسماء الستة<br><span style="font-size:.9rem;opacity:.6">اللغة العربية • الفصل الأول</span></div>
+            <button class="ctrl-btn" style="font-size:3rem;opacity:.9" id="big-play-btn" onclick="togglePlay()">▶</button>
+          </div>
+
+          <!-- WATERMARK -->
+          <div class="vid-watermark" id="vid-watermark">فاطمة الزهراء • 01012345678</div>
+
+          <!-- ANTI RECORD -->
+          <div class="anti-record"></div>
+
+          <!-- QUIZ POPUP -->
+          <div class="quiz-popup" id="quiz-popup">
+            <div style="font-size:.72rem;color:var(--teal);font-weight:700;margin-bottom:8px">⏸️ سؤال تفاعلي</div>
+            <div style="font-size:.88rem;font-weight:700;margin-bottom:14px" id="popup-q">ما مفرد كلمة "أبناء"؟</div>
+            <div style="display:flex;flex-direction:column;gap:8px" id="popup-opts">
+              <button class="option-btn btn-sm" onclick="answerPopup(this, false)" style="padding:8px 14px;font-size:.8rem">ابنة</button>
+              <button class="option-btn btn-sm" onclick="answerPopup(this, true)" style="padding:8px 14px;font-size:.8rem">ابن</button>
+              <button class="option-btn btn-sm" onclick="answerPopup(this, false)" style="padding:8px 14px;font-size:.8rem">بنات</button>
+            </div>
+          </div>
+
+          <!-- CONTROLS -->
+          <div class="video-controls" id="video-controls">
+            <div class="progress-row">
+              <span style="font-size:.75rem;color:rgba(255,255,255,.7)">▶</span>
+              <div class="vid-timeline-wrap" id="timeline" onclick="seek(event)">
+                <div class="vid-timeline-fill" id="timeline-fill" style="width:35%"></div>
+                <div class="vid-timeline-dot" style="--pos:35%"></div>
+              </div>
+              <span style="font-size:.75rem;color:rgba(255,255,255,.7)">🔊</span>
+            </div>
+            <div class="controls-row">
+              <button class="ctrl-btn" id="play-btn" onclick="togglePlay()" title="تشغيل/إيقاف">▶</button>
+              <button class="ctrl-btn" onclick="skip(-10)" title="10 ثواني للخلف">⏪</button>
+              <button class="ctrl-btn" onclick="skip(10)" title="10 ثواني للأمام">⏩</button>
+              <span class="vid-time-display" id="time-display">14:34 / 41:20</span>
+              <div style="flex:1"></div>
+              <div style="position:relative">
+                <button class="ctrl-btn" onclick="toggleMenu('speed-menu')" title="سرعة التشغيل">🐇 <span id="speed-label">1x</span></button>
+                <div class="speed-menu" id="speed-menu">
+                  <div class="speed-opt" onclick="setSpeed(0.5)">0.5x</div>
+                  <div class="speed-opt" onclick="setSpeed(0.75)">0.75x</div>
+                  <div class="speed-opt active" onclick="setSpeed(1)" id="speed-1">1x</div>
+                  <div class="speed-opt" onclick="setSpeed(1.25)">1.25x</div>
+                  <div class="speed-opt" onclick="setSpeed(1.5)">1.5x</div>
+                  <div class="speed-opt" onclick="setSpeed(2)">2x</div>
+                </div>
+              </div>
+              <div style="position:relative">
+                <button class="ctrl-btn" onclick="toggleMenu('quality-menu')" title="جودة الفيديو">🎬 <span id="quality-label">720p</span></button>
+                <div class="quality-menu" id="quality-menu">
+                  <div class="speed-opt" onclick="setQuality('144p')">144p</div>
+                  <div class="speed-opt" onclick="setQuality('360p')">360p</div>
+                  <div class="speed-opt" onclick="setQuality('480p')">480p</div>
+                  <div class="speed-opt active" onclick="setQuality('720p')">720p ✓</div>
+                  <div class="speed-opt" onclick="setQuality('1080p')">1080p</div>
+                </div>
+              </div>
+              <button class="ctrl-btn" onclick="togglePiP()" title="Picture in Picture">🔲</button>
+              <button class="ctrl-btn" onclick="toggleFullscreen()" title="ملء الشاشة">⛶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIDEO INFO -->
+      <div class="video-info-section">
+        <div class="video-info-title" id="info-title">الأسماء الستة — أب، أخ، حم، هن، فم، ذو</div>
+        <div class="video-info-meta">
+          <span>📚 الفصل الأول</span>
+          <span>👁️ 1,240 مشاهدة</span>
+          <span>📅 6 أكتوبر 2024</span>
+          <span>⏱️ 41:20 دقيقة</span>
+        </div>
+        <div class="video-actions">
+          <button class="btn btn-ghost btn-sm" onclick="UI.toast('تم الإبلاغ عن مشكلة ✅','info')">🚩 إبلاغ عن مشكلة</button>
+          <button class="btn btn-ghost btn-sm" id="bookmark-btn" onclick="toggleBookmark()">🔖 حفظ</button>
+          <button class="btn btn-ghost btn-sm" onclick="UI.toast('تم النسخ!','success')">🔗 مشاركة</button>
+          <button class="btn btn-primary btn-sm" onclick="nextLesson()">التالي ←</button>
+        </div>
+      </div>
+
+    </div><!-- /player-main -->
+
+    <!-- SIDEBAR -->
+    <div class="player-sidebar">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" onclick="switchTab('lessons',this)">📚 الحصص</button>
+        <button class="sidebar-tab" onclick="switchTab('comments',this)">💬 تعليقات</button>
+        <button class="sidebar-tab" onclick="switchTab('notes',this)">📝 ملاحظاتي</button>
+      </div>
+
+      <!-- LESSONS TAB -->
+      <div class="sidebar-content" id="tab-lessons">
+        <div id="lessons-sidebar-list"></div>
+      </div>
+
+      <!-- COMMENTS TAB -->
+      <div class="sidebar-content" id="tab-comments" style="display:none">
+        <div class="comment-input-row">
+          <textarea class="comment-area" id="comment-input" placeholder="اكتب تعليقك أو سؤالك..."></textarea>
+          <div class="flex justify-between mt-8">
+            <span style="font-size:.72rem;color:var(--text-muted)">سيرد المساعد خلال 24 ساعة</span>
+            <button class="btn btn-teal btn-sm" onclick="postComment()">📤 إرسال</button>
+          </div>
+        </div>
+        <div id="comments-list"></div>
+      </div>
+
+      <!-- NOTES TAB -->
+      <div class="sidebar-content" id="tab-notes" style="display:none">
+        <div style="padding:16px">
+          <div style="font-size:.8rem;color:var(--teal);margin-bottom:8px">📝 ملاحظاتك عند <span id="note-time">14:34</span></div>
+          <textarea class="comment-area" id="notes-area" placeholder="اكتب ملاحظاتك هنا..." style="min-height:120px"></textarea>
+          <button class="btn btn-primary w-full mt-8 btn-sm" onclick="saveNote()">💾 حفظ الملاحظة</button>
+          <div class="divider"></div>
+          <div id="saved-notes"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="platform-footer" id="platform-footer" style="border-top:1px solid var(--border)"></footer>
+
+<script src="app.js"></script>
+<script>
+// ── LESSONS ─────────────────────────────────────────────────
+const lessons = [
+  { id:1, title:'الفعل المضارع وأحواله', duration:'45:20', done:true,  locked:false },
+  { id:2, title:'الجملة الاسمية والفعلية', duration:'38:10', done:true,  locked:false },
+  { id:3, title:'علامات الإعراب الأصلية', duration:'52:05', done:true,  locked:false },
+  { id:4, title:'الأسماء الستة', duration:'41:30', done:false, locked:false, active:true },
+  { id:5, title:'الأفعال الخمسة', duration:'35:45', done:false, locked:true  },
+  { id:6, title:'الأسماء الموصولة', duration:'48:00', done:false, locked:true  },
+];
+
+let isPlaying = false;
+let currentTime = 874; // seconds (14:34)
+let totalTime   = 2480;
+let speed = 1;
+let timerInterval = null;
+let bookmarked = false;
+const savedNotes = [];
+
+// Render lessons sidebar
+function renderLessonsSidebar() {
+  const list = document.getElementById('lessons-sidebar-list');
+  list.innerHTML = lessons.map(l => `
+    <div class="lesson-sidebar-item ${l.active ? 'active' : ''}" onclick="${l.locked ? "UI.toast('هذه الحصة مقفلة 🔒','warning')" : `loadLesson(${l.id})`}">
+      <div class="lesson-thumb ${l.done ? 'done' : l.locked ? 'locked' : ''}">
+        ${l.done ? '✓' : l.locked ? '🔒' : '▶'}
+      </div>
+      <div class="lesson-sidebar-info">
+        <div class="title">${l.title}</div>
+        <div class="meta">⏱️ ${l.duration}${l.done ? ' • ✅ تمت المشاهدة' : ''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function loadLesson(id) {
+  const l = lessons.find(x => x.id === id);
+  if (!l || l.locked) return;
+  lessons.forEach(x => x.active = x.id === id);
+  document.getElementById('current-lesson-title').textContent = l.title;
+  document.getElementById('info-title').textContent = l.title;
+  currentTime = 0; updateTimeline();
+  renderLessonsSidebar();
+  UI.toast(`تحميل: ${l.title}`, 'info');
+}
+
+function nextLesson() {
+  const idx = lessons.findIndex(l => l.active);
+  if (idx < lessons.length - 1 && !lessons[idx+1].locked) loadLesson(lessons[idx+1].id);
+  else UI.toast('لا توجد حصة تالية متاحة', 'warning');
+}
+
+// ── PLAYER CONTROLS ──────────────────────────────────────────
+function togglePlay() {
+  isPlaying = !isPlaying;
+  const btn = document.getElementById('play-btn');
+  const bigBtn = document.getElementById('big-play-btn');
+  const bg = document.getElementById('video-bg');
+  if (isPlaying) {
+    btn.textContent = '⏸'; bigBtn.textContent = '⏸';
+    bg.style.opacity = '0.3';
+    timerInterval = setInterval(() => { currentTime = Math.min(currentTime + speed, totalTime); updateTimeline(); if(currentTime >= totalTime) togglePlay(); }, 1000);
+    showQuizAt(880);
+  } else {
+    btn.textContent = '▶'; bigBtn.textContent = '▶';
+    bg.style.opacity = '1';
+    clearInterval(timerInterval);
+  }
+}
+
+function skip(secs) { currentTime = Math.max(0, Math.min(currentTime + secs, totalTime)); updateTimeline(); }
+
+function seek(e) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct  = 1 - ((e.clientX - rect.left) / rect.width); // RTL
+  currentTime = Math.floor(pct * totalTime);
+  updateTimeline();
+}
+
+function updateTimeline() {
+  const pct = (currentTime / totalTime) * 100;
+  const fill = document.getElementById('timeline-fill');
+  const disp = document.getElementById('time-display');
+  const dot  = document.querySelector('.vid-timeline-dot');
+  if (fill) fill.style.width = `${pct}%`;
+  if (dot)  dot.style.setProperty('--pos', `${pct}%`);
+  if (disp) disp.textContent = `${fmt(currentTime)} / ${fmt(totalTime)}`;
+  document.getElementById('note-time').textContent = fmt(currentTime);
+}
+
+function fmt(s) { return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+
+function setSpeed(s) {
+  speed = s;
+  document.getElementById('speed-label').textContent = `${s}x`;
+  document.querySelectorAll('.speed-opt').forEach(o => o.classList.remove('active'));
+  document.getElementById('speed-menu').style.display = 'none';
+  UI.toast(`سرعة التشغيل: ${s}x`, 'info');
+}
+
+function setQuality(q) {
+  document.getElementById('quality-label').textContent = q;
+  toggleMenu('quality-menu');
+  UI.toast(`جودة الفيديو: ${q}`, 'info');
+}
+
+function toggleMenu(id) {
+  const m = document.getElementById(id);
+  m.style.display = m.style.display === 'block' ? 'none' : 'block';
+}
+
+function togglePiP() { UI.toast('وضع Picture in Picture', 'info'); }
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.getElementById('video-container').requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+
+function toggleBookmark() {
+  bookmarked = !bookmarked;
+  const btn = document.getElementById('bookmark-btn');
+  btn.textContent = bookmarked ? '🔖 محفوظ ✓' : '🔖 حفظ';
+  btn.style.color = bookmarked ? 'var(--gold)' : '';
+  UI.toast(bookmarked ? 'تم حفظ الحصة ✅' : 'تم إلغاء الحفظ', bookmarked ? 'success' : 'info');
+}
+
+// ── QUIZ POPUP ────────────────────────────────────────────────
+let quizShown = false;
+function showQuizAt(time) {
+  if (!quizShown && currentTime >= time) {
+    quizShown = true;
+    if (isPlaying) togglePlay();
+    document.getElementById('quiz-popup').classList.add('show');
+  }
+}
+
+function answerPopup(btn, correct) {
+  const btns = document.querySelectorAll('#popup-opts .option-btn');
+  btns.forEach(b => b.disabled = true);
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  setTimeout(() => {
+    document.getElementById('quiz-popup').classList.remove('show');
+    UI.toast(correct ? '🎉 إجابة صحيحة!' : '❌ إجابة خاطئة، الصواب: ابن', correct ? 'success' : 'danger');
+  }, 1500);
+}
+
+// ── COMMENTS ──────────────────────────────────────────────────
+const comments = [
+  { user:'فاطمة الزهراء', av:'ف', text:'شكراً يا مستر الشرح كان واضح جداً ❤️', time:'منذ يومين', likes:24 },
+  { user:'محمد إبراهيم', av:'م', text:'في الدقيقة 23 مش فاهم إيه الفرق بين أبٌ وأبٍ؟', time:'منذ 3 أيام', likes:8 },
+  { user:'أستاذ صالح', av:'ص', text:'@ محمد — الفرق في الإعراب: الضمة للرفع والكسرة للجر', time:'منذ يومين', likes:45 },
+];
+
+function renderComments() {
+  const list = document.getElementById('comments-list');
+  list.innerHTML = comments.map((c, i) => `
+    <div class="comment-item">
+      <div class="comment-header">
+        <div class="avatar avatar-sm">${c.av}</div>
+        <div>
+          <span style="font-size:.82rem;font-weight:700">${c.user}</span>
+          <span style="font-size:.7rem;color:var(--text-muted);margin-right:8px">${c.time}</span>
+        </div>
+      </div>
+      <div class="comment-text">${c.text}</div>
+      <div class="comment-actions">
+        <span class="comment-like" onclick="likeComment(${i}, this)">👍 ${c.likes}</span>
+        <span style="cursor:pointer" onclick="UI.toast('رد...','info')">💬 رد</span>
+      </div>
+    </div>`).join('');
+}
+
+function postComment() {
+  const text = document.getElementById('comment-input').value.trim();
+  if (!text) { UI.toast('اكتب تعليقك أولاً','danger'); return; }
+  comments.unshift({ user:'فاطمة الزهراء', av:'ف', text, time:'الآن', likes:0 });
+  document.getElementById('comment-input').value = '';
+  renderComments();
+  UI.toast('تم إرسال تعليقك ✅','success');
+}
+
+function likeComment(idx, el) {
+  comments[idx].likes++;
+  el.textContent = `👍 ${comments[idx].likes}`;
+}
+
+// ── NOTES ─────────────────────────────────────────────────────
+function saveNote() {
+  const text = document.getElementById('notes-area').value.trim();
+  if (!text) { UI.toast('اكتب ملاحظتك أولاً','danger'); return; }
+  savedNotes.unshift({ text, time: fmt(currentTime), ts: new Date().toLocaleTimeString('ar') });
+  document.getElementById('notes-area').value = '';
+  renderNotes();
+  UI.toast('تم حفظ الملاحظة ✅','success');
+}
+
+function renderNotes() {
+  const el = document.getElementById('saved-notes');
+  el.innerHTML = savedNotes.map(n => `
+    <div style="background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.2);border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="font-size:.7rem;color:var(--teal);margin-bottom:4px">⏱️ عند ${n.time}</div>
+      <div style="font-size:.82rem">${n.text}</div>
+    </div>`).join('') || '<div style="text-align:center;color:var(--text-muted);font-size:.82rem;padding:20px">لا توجد ملاحظات محفوظة</div>';
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  ['lessons','comments','notes'].forEach(t => {
+    const el = document.getElementById(`tab-${t}`);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  if (tab === 'comments') renderComments();
+  if (tab === 'notes') renderNotes();
+}
+
+// ── WATERMARK ANIMATION ───────────────────────────────────────
+function animateWatermark() {
+  const wm = document.getElementById('vid-watermark');
+  if (!wm) return;
+  const positions = [
+    { top:'10%', left:'10%' }, { top:'20%', left:'60%' },
+    { top:'60%', left:'20%' }, { top:'70%', left:'70%' },
+  ];
+  let i = 0;
+  function move() {
+    const p = positions[i % positions.length];
+    wm.style.top = p.top; wm.style.left = p.left;
+    wm.style.opacity = '0.08';
+    i++;
+  }
+  move();
+  setInterval(move, 6000);
+}
+
+// ── ANTI-SCREENSHOT ───────────────────────────────────────────
+document.addEventListener('contextmenu', e => { e.preventDefault(); UI.toast('🚫 غير مسموح هنا','warning'); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'PrintScreen') UI.toast('🚫 تم منع التصوير!','danger');
+  if ((e.ctrlKey||e.metaKey) && e.key==='p') e.preventDefault();
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft')  skip(5);
+  if (e.code === 'ArrowRight') skip(-5);
+});
+
+// ── INIT ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  Platform.login('student');
+  renderLessonsSidebar();
+  renderComments();
+  renderNotes();
+  animateWatermark();
+  updateTimeline();
+  renderFooter();
+});
+</script>
+</body>
+</html>

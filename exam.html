@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>امتحان الوحدة الأولى | منصة أستاذ صالح</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+body { background:var(--deep); }
+
+.exam-header {
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(7,11,21,.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:14px 28px;display:flex;align-items:center;gap:20px;
+}
+.exam-timer {
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);
+  padding:8px 18px;border-radius:10px;font-family:'Tajawal',sans-serif;
+  font-size:1.2rem;font-weight:900;color:var(--danger);
+}
+.exam-timer.warning { background:rgba(255,165,2,.1);border-color:rgba(255,165,2,.3);color:var(--warning); }
+.exam-timer.safe    { background:rgba(0,220,130,.1);border-color:rgba(0,220,130,.3);color:var(--success); }
+
+.exam-progress-header { flex:1; }
+.exam-title-header { font-size:1rem;font-weight:800; }
+.exam-sub-header { font-size:.75rem;color:var(--text-muted);margin-top:2px; }
+
+.watermark {
+  position:fixed;inset:0;pointer-events:none;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Tajawal',sans-serif;font-size:2.5rem;font-weight:900;
+  color:rgba(212,175,55,.04);transform:rotate(-30deg);user-select:none;
+  white-space:nowrap;
+}
+
+.exam-layout { display:flex;gap:24px;padding:100px 28px 28px;max-width:1200px;margin:0 auto; }
+
+.questions-nav {
+  width:220px;flex-shrink:0;position:sticky;top:80px;height:fit-content;
+}
+.q-nav-title { font-size:.78rem;font-weight:700;color:var(--text-muted);margin-bottom:12px; }
+.q-grid { display:grid;grid-template-columns:repeat(5,1fr);gap:6px; }
+.q-dot {
+  aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:700;cursor:pointer;transition:.2s;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text-muted);
+}
+.q-dot:hover { border-color:var(--teal);color:var(--teal); }
+.q-dot.answered { background:rgba(0,180,216,.15);border-color:var(--teal);color:var(--teal); }
+.q-dot.current  { background:linear-gradient(135deg,var(--gold),var(--gold-dark));border-color:var(--gold);color:var(--deep); }
+.q-dot.correct  { background:rgba(0,220,130,.15);border-color:var(--success);color:var(--success); }
+.q-dot.wrong    { background:rgba(255,71,87,.15);border-color:var(--danger);color:var(--danger); }
+
+.q-legend { display:flex;flex-direction:column;gap:8px;margin-top:14px;font-size:.72rem;color:var(--text-muted); }
+.q-legend-item { display:flex;align-items:center;gap:6px; }
+.q-legend-dot { width:10px;height:10px;border-radius:3px;flex-shrink:0; }
+
+.question-main { flex:1; }
+
+.question-card {
+  background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;
+  animation:fadeInUp .4s ease;
+}
+.q-num { font-size:.75rem;color:var(--teal);font-weight:700;margin-bottom:12px; }
+.q-text { font-size:1.1rem;font-weight:700;line-height:1.7;margin-bottom:28px; }
+
+.options-list { display:flex;flex-direction:column;gap:12px; }
+.option-btn {
+  display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:12px;
+  border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);
+  cursor:pointer;transition:all .25s;text-align:right;width:100%;
+  font-family:'Cairo',sans-serif;font-size:.92rem;font-weight:600;color:var(--text);
+}
+.option-btn:hover:not(:disabled) { border-color:var(--teal);background:rgba(0,180,216,.06);color:var(--white); }
+.option-btn.selected { border-color:var(--teal);background:rgba(0,180,216,.1);color:var(--white); }
+.option-btn.correct  { border-color:var(--success);background:rgba(0,220,130,.1);color:var(--success); }
+.option-btn.wrong    { border-color:var(--danger);background:rgba(255,71,87,.08);color:var(--danger); }
+.option-btn:disabled { cursor:default; }
+.option-letter { width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;flex-shrink:0; }
+.option-btn.correct .option-letter  { background:var(--success);color:#000; }
+.option-btn.wrong .option-letter    { background:var(--danger);color:#fff; }
+.option-btn.selected .option-letter { background:var(--teal);color:#fff; }
+
+.cross-out { text-decoration:line-through;opacity:.5; }
+
+.question-footer { display:flex;justify-content:space-between;align-items:center;margin-top:24px;flex-wrap:wrap;gap:12px; }
+.q-actions { display:flex;gap:10px; }
+
+.result-screen {
+  position:fixed;inset:0;z-index:200;background:var(--deep);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px;text-align:center;
+}
+.result-screen.show { display:flex; }
+.result-circle {
+  width:160px;height:160px;border-radius:50%;
+  background:conic-gradient(var(--gold) var(--pct,0%), rgba(255,255,255,.08) 0%);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 32px;
+  position:relative;
+}
+.result-circle::before { content:'';position:absolute;inset:12px;border-radius:50%;background:var(--deep); }
+.result-pct { position:relative;z-index:1;font-family:'Tajawal',sans-serif;font-size:2.2rem;font-weight:900;color:var(--gold); }
+.result-rank { font-size:1rem;margin:12px 0;color:var(--teal); }
+
+/* Offline banner */
+.offline-banner {
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:rgba(255,165,2,.9);color:#000;padding:12px 24px;
+  text-align:center;font-weight:700;font-size:.88rem;display:none;
+}
+</style>
+</head>
+<body>
+<div class="watermark" id="watermark">فاطمة الزهراء • 01012345678</div>
+
+<!-- EXAM HEADER -->
+<div class="exam-header">
+  <div class="exam-progress-header">
+    <div class="exam-title-header">📝 امتحان الوحدة الأولى</div>
+    <div class="exam-sub-header">اللغة العربية • الفصل الأول <span id="answered-count">0</span>/<span id="total-count">10</span> سؤال أجبتَ عليه</div>
+  </div>
+  <div style="flex:1;max-width:300px">
+    <div class="progress-wrap">
+      <div class="progress-fill" id="exam-progress" style="width:0%"></div>
+    </div>
+  </div>
+  <div class="exam-timer safe" id="exam-timer">⏱️ <span id="timer-display">30:00</span></div>
+  <button class="btn btn-ghost btn-sm" onclick="showReviewModal()">👁️ مراجعة</button>
+  <button class="btn btn-primary" onclick="submitExam()">✅ تسليم</button>
+</div>
+
+<div class="exam-layout">
+  <!-- Questions nav -->
+  <div class="questions-nav">
+    <div class="q-nav-title">خريطة الأسئلة</div>
+    <div class="q-grid" id="q-grid"></div>
+    <div class="q-legend">
+      <div class="q-legend-item"><div class="q-legend-dot" style="background:rgba(0,180,216,.4)"></div>أُجيب عليه</div>
+      <div class="q-legend-item"><div class="q-legend-dot" style="background:linear-gradient(135deg,var(--gold),var(--gold-dark))"></div>الحالي</div>
+      <div class="q-legend-item"><div class="q-legend-dot" style="background:rgba(255,255,255,.1)"></div>لم يُجَب</div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:.78rem;color:var(--text-muted);text-align:center">
+      📡 حالة الاتصال: <span id="conn-status" style="color:var(--success)">متصل</span>
+    </div>
+  </div>
+
+  <!-- Question main -->
+  <div class="question-main" id="question-main"></div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div class="modal-overlay" id="review-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">👁️ مراجعة قبل التسليم</span>
+      <button class="modal-close" onclick="document.getElementById('review-modal').classList.remove('open')">×</button>
+    </div>
+    <div id="review-list"></div>
+    <div class="flex gap-12 mt-20">
+      <button class="btn btn-ghost flex-1" onclick="document.getElementById('review-modal').classList.remove('open')">رجوع للامتحان</button>
+      <button class="btn btn-primary flex-1" onclick="confirmSubmit()">✅ تسليم نهائي</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div class="result-screen" id="result-screen">
+  <div class="result-circle" id="result-circle">
+    <span class="result-pct" id="result-pct">-</span>
+  </div>
+  <h2 style="font-size:2rem;margin-bottom:8px" id="result-msg">🎉 أداء ممتاز!</h2>
+  <div class="result-rank" id="result-rank">ترتيبك: #1 من 210 طالب</div>
+  <div style="display:flex;gap:24px;margin:24px 0">
+    <div class="text-center"><div style="font-family:'Tajawal',sans-serif;font-size:1.6rem;font-weight:900;color:var(--success)" id="res-correct">-</div><div style="font-size:.75rem;color:var(--text-muted)">صحيح</div></div>
+    <div class="text-center"><div style="font-family:'Tajawal',sans-serif;font-size:1.6rem;font-weight:900;color:var(--danger)" id="res-wrong">-</div><div style="font-size:.75rem;color:var(--text-muted)">خطأ</div></div>
+    <div class="text-center"><div style="font-family:'Tajawal',sans-serif;font-size:1.6rem;font-weight:900;color:var(--text-muted)" id="res-skip">-</div><div style="font-size:.75rem;color:var(--text-muted)">لم يُجَب</div></div>
+  </div>
+  <div style="display:flex;gap:12px">
+    <a href="student-dashboard.html" class="btn btn-primary">🏠 الرئيسية</a>
+    <button class="btn btn-ghost" onclick="showAnswers()">📋 نموذج الإجابة</button>
+  </div>
+</div>
+
+<!-- OFFLINE BANNER -->
+<div class="offline-banner" id="offline-banner">
+  ⚠️ انقطع الاتصال بالإنترنت — لا تقلق، إجاباتك محفوظة تلقائياً
+</div>
+
+<script src="app.js"></script>
+<script>
+// ── QUESTIONS DATA ───────────────────────────────────────────
+const questions = [
+  { id:1, text:'ما إعراب كلمة "الطلابُ" في جملة: جاء الطلابُ متأخرين؟', options:['مفعول به منصوب بالفتحة','فاعل مرفوع بالضمة','مبتدأ مرفوع بالضمة','خبر مرفوع بالضمة'], correct:1 },
+  { id:2, text:'ما الأسماء الستة في اللغة العربية؟', options:['أب، أم، أخ، حم، هن، فم','أب، أخ، حم، هن، فم، ذو','أب، أم، أخ، عم، خال، ابن','أب، أخ، حم، هن، فم، ابن'], correct:1 },
+  { id:3, text:'أُلحق بالمثنى في إعرابه:', options:['الأسماء الستة','كلا وكلتا','ما لا ينصرف','المنادى المفرد العلم'], correct:1 },
+  { id:4, text:'"يدافعان عن وطنهما" — ما نوع الفعل يدافعان؟', options:['فعل ماض','فعل مضارع للمثنى','فعل أمر','فعل ناقص'], correct:1 },
+  { id:5, text:'علامة رفع المثنى هي:', options:['الضمة','الألف','الواو والنون','الياء والنون'], correct:1 },
+  { id:6, text:'"إن الطالبَ مجتهدٌ" — "الطالب" خبر أم اسم؟', options:['خبر إن منصوب','اسم إن منصوب','مبتدأ','فاعل'], correct:1 },
+  { id:7, text:'الفعل المضارع المرفوع يُعرب بـ:', options:['الفتحة','الضمة الظاهرة أو المقدرة','الكسرة','سكون على آخره'], correct:1 },
+  { id:8, text:'كلمة "مدرسةٌ" — حركة التنوين تدل على:', options:['النصب','الجر','الرفع','الجزم'], correct:2 },
+  { id:9, text:'جمع المذكر السالم يُرفع بـ:', options:['الألف والنون','الواو والنون','الضمة','الياء والنون'], correct:1 },
+  { id:10, text:'ما المعنى الصحيح لـ "الإعراب" في اللغة العربية؟', options:['الكتابة الصحيحة','تغيير أواخر الكلمات بتغيير موقعها','حفظ القرآن','تعلم اللغة'], correct:1 },
+];
+
+let state = {
+  current: 0,
+  answers: new Array(questions.length).fill(null),
+  reviewed: false,
+  submitted: false,
+  timeLeft: 30 * 60,
+  timer: null
+};
+
+// ── TIMER ─────────────────────────────────────────────────────
+function startTimer() {
+  state.timer = setInterval(() => {
+    if (state.submitted) { clearInterval(state.timer); return; }
+    state.timeLeft--;
+    const m = Math.floor(state.timeLeft / 60);
+    const s = state.timeLeft % 60;
+    document.getElementById('timer-display').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    const el = document.getElementById('exam-timer');
+    if (state.timeLeft <= 0) { clearInterval(state.timer); submitExam(true); }
+    else if (state.timeLeft <= 300) { el.className = 'exam-timer warning'; }
+    else { el.className = 'exam-timer safe'; }
+  }, 1000);
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderQuestion(idx) {
+  const q = questions[idx];
+  const letters = ['أ','ب','ج','د'];
+  const ans = state.answers[idx];
+  const isSubmitted = state.submitted;
+  document.getElementById('question-main').innerHTML = `
+    <div class="question-card">
+      <div class="q-num">السؤال ${idx+1} من ${questions.length}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="options-list">
+        ${q.options.map((opt, i) => {
+          let cls = '';
+          if (isSubmitted) {
+            if (i === q.correct) cls = 'correct';
+            else if (i === ans && i !== q.correct) cls = 'wrong';
+          } else if (i === ans) cls = 'selected';
+          return `<button class="option-btn ${cls}" ${isSubmitted ? 'disabled' : ''} onclick="selectAnswer(${idx},${i})">
+            <span class="option-letter">${letters[i]}</span>
+            <span>${opt}</span>
+            ${isSubmitted && i === q.correct ? '<span style="margin-right:auto;font-size:.8rem">✅ صحيح</span>' : ''}
+          </button>`;
+        }).join('')}
+      </div>
+      <div class="question-footer">
+        <div class="q-actions">
+          <button class="btn btn-ghost btn-sm" onclick="prevQuestion()" ${idx===0?'disabled':''}>← السابق</button>
+          <button class="btn btn-ghost btn-sm" onclick="flagQuestion(${idx})">🚩 تأجيل</button>
+          <button class="btn btn-ghost btn-sm" onclick="nextQuestion()" ${idx===questions.length-1?'disabled':''}>التالي →</button>
+        </div>
+        <div style="font-size:.75rem;color:var(--text-muted)">${ans !== null ? '✅ تمت الإجابة' : '⬜ لم تُجَب بعد'}</div>
+      </div>
+    </div>`;
+  renderNavGrid();
+  updateProgress();
+}
+
+function renderNavGrid() {
+  const grid = document.getElementById('q-grid');
+  if (!grid) return;
+  grid.innerHTML = questions.map((q, i) => {
+    let cls = 'q-dot';
+    if (state.submitted) {
+      if (state.answers[i] === q.correct) cls += ' correct';
+      else if (state.answers[i] !== null) cls += ' wrong';
+    } else {
+      if (i === state.current) cls += ' current';
+      else if (state.answers[i] !== null) cls += ' answered';
+    }
+    return `<div class="${cls}" onclick="goToQuestion(${i})">${i+1}</div>`;
+  }).join('');
+}
+
+function updateProgress() {
+  const answered = state.answers.filter(a => a !== null).length;
+  document.getElementById('answered-count').textContent = answered;
+  document.getElementById('total-count').textContent = questions.length;
+  document.getElementById('exam-progress').style.width = `${(answered/questions.length)*100}%`;
+}
+
+// ── INTERACTIONS ──────────────────────────────────────────────
+function selectAnswer(qIdx, optIdx) {
+  if (state.submitted) return;
+  state.answers[qIdx] = optIdx;
+  renderQuestion(qIdx);
+  saveProgress();
+}
+
+function nextQuestion() {
+  if (state.current < questions.length - 1) { state.current++; renderQuestion(state.current); }
+}
+
+function prevQuestion() {
+  if (state.current > 0) { state.current--; renderQuestion(state.current); }
+}
+
+function goToQuestion(idx) { state.current = idx; renderQuestion(idx); }
+
+function flagQuestion(idx) { UI.toast(`تم تأجيل السؤال ${idx+1}`, 'warning'); }
+
+function saveProgress() {
+  try { localStorage.setItem('saleh_exam_progress', JSON.stringify(state.answers)); } catch(e) {}
+}
+
+function loadProgress() {
+  try {
+    const saved = localStorage.getItem('saleh_exam_progress');
+    if (saved) { state.answers = JSON.parse(saved); UI.toast('تم استعادة إجاباتك السابقة ✅','success'); }
+  } catch(e) {}
+}
+
+// ── REVIEW & SUBMIT ───────────────────────────────────────────
+function showReviewModal() {
+  const list = document.getElementById('review-list');
+  const unanswered = state.answers.map((a,i) => a === null ? i+1 : null).filter(Boolean);
+  list.innerHTML = `
+    ${unanswered.length > 0 ? `<div class="alert alert-warning">⚠️ الأسئلة التالية لم يُجَب عليها: ${unanswered.join('، ')}</div>` : '<div class="alert alert-success">✅ تم الإجابة على جميع الأسئلة!</div>'}
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px">
+      ${questions.map((q,i) => `<div class="q-dot ${state.answers[i]!==null?'answered':''}" onclick="goToQuestion(${i});document.getElementById('review-modal').classList.remove('open')">${i+1}</div>`).join('')}
+    </div>`;
+  document.getElementById('review-modal').classList.add('open');
+}
+
+function confirmSubmit() {
+  document.getElementById('review-modal').classList.remove('open');
+  submitExam();
+}
+
+function submitExam(auto = false) {
+  if (state.submitted) return;
+  if (!auto) {
+    const unanswered = state.answers.filter(a => a === null).length;
+    if (unanswered > 0) {
+      UI.confirm(`لم تجب على ${unanswered} سؤال. هل تريد التسليم؟`, () => finalSubmit());
+      return;
+    }
+  }
+  finalSubmit();
+}
+
+function finalSubmit() {
+  clearInterval(state.timer);
+  state.submitted = true;
+  try { localStorage.removeItem('saleh_exam_progress'); } catch(e) {}
+
+  const correct = state.answers.filter((a, i) => a === questions[i].correct).length;
+  const wrong   = state.answers.filter((a, i) => a !== null && a !== questions[i].correct).length;
+  const skipped = state.answers.filter(a => a === null).length;
+  const pct     = Math.round((correct / questions.length) * 100);
+
+  const resultEl = document.getElementById('result-screen');
+  const circleEl = document.getElementById('result-circle');
+  document.getElementById('result-pct').textContent   = `${pct}%`;
+  document.getElementById('res-correct').textContent  = correct;
+  document.getElementById('res-wrong').textContent    = wrong;
+  document.getElementById('res-skip').textContent     = skipped;
+  circleEl.style.setProperty('--pct', `${pct * 3.6}deg`);
+
+  const msgs = pct >= 90 ? '🎉 أداء رائع!' : pct >= 70 ? '👍 أداء جيد!' : '💪 استمر في التحسن!';
+  document.getElementById('result-msg').textContent = msgs;
+  document.getElementById('result-rank').textContent = `ترتيبك: #${Math.floor(Math.random()*5)+1} من 210 طالب على مستوى الجمهورية`;
+
+  resultEl.classList.add('show');
+}
+
+function showAnswers() {
+  document.getElementById('result-screen').classList.remove('show');
+  renderQuestion(state.current);
+}
+
+// ── ONLINE / OFFLINE ──────────────────────────────────────────
+window.addEventListener('offline', () => {
+  document.getElementById('offline-banner').style.display = 'block';
+  document.getElementById('conn-status').textContent = 'غير متصل';
+  document.getElementById('conn-status').style.color = 'var(--danger)';
+  saveProgress();
+});
+window.addEventListener('online', () => {
+  document.getElementById('offline-banner').style.display = 'none';
+  document.getElementById('conn-status').textContent = 'متصل';
+  document.getElementById('conn-status').style.color = 'var(--success)';
+  UI.toast('تم استعادة الاتصال ✅','success');
+});
+
+// ── ANTI-CHEAT ────────────────────────────────────────────────
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && ['c','v','p','s','u'].includes(e.key.toLowerCase())) e.preventDefault();
+  if (e.key === 'PrintScreen') { UI.toast('تم تسجيل محاولة التصوير! ⚠️','danger'); }
+});
+
+// Visibility change detection
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && !state.submitted) {
+    UI.toast('تم تسجيل مغادرة صفحة الامتحان! ⚠️','warning');
+  }
+});
+
+// ── INIT ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadProgress();
+  renderQuestion(0);
+  startTimer();
+  renderFooter();
+
+  // Rotating watermark
+  const wm = document.getElementById('watermark');
+  if (wm) {
+    let positions = ['10% 20%','80% 40%','30% 70%','60% 10%'];
+    let pi = 0;
+    setInterval(() => {
+      pi = (pi+1) % positions.length;
+      const [l,t] = positions[pi].split(' ');
+      wm.style.top = t; wm.style.left = l;
+    }, 8000);
+  }
+});
+</script>
+</body>
+</html>

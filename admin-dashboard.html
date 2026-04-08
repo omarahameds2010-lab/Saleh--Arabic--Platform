@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم المدرس | منصة أستاذ صالح</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:28px; }
+.kpi-card { padding:24px; position:relative; overflow:hidden; }
+.kpi-card::after { content:''; position:absolute; top:-20px; left:-20px; width:80px; height:80px; border-radius:50%; opacity:.08; }
+.kpi-card.gold::after  { background:var(--gold); }
+.kpi-card.teal::after  { background:var(--teal); }
+.kpi-card.green::after { background:var(--success); }
+.kpi-card.red::after   { background:var(--danger); }
+.kpi-icon { font-size:1.6rem; margin-bottom:12px; display:block; }
+.kpi-val  { font-family:'Tajawal',sans-serif; font-size:2rem; font-weight:900; display:block; }
+.kpi-lbl  { font-size:.78rem; color:var(--text-muted); margin-top:4px; }
+.kpi-change { font-size:.72rem; margin-top:6px; padding:3px 8px; border-radius:20px; display:inline-block; }
+.kpi-change.up   { background:rgba(0,220,130,.12); color:var(--success); }
+.kpi-change.down { background:rgba(255,71,87,.12);  color:var(--danger);  }
+
+.chart-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; }
+.chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.chart-title { font-weight:800; font-size:1rem; }
+.rev-chart { height:120px; display:flex; align-items:flex-end; gap:8px; }
+.rev-bar { flex:1; border-radius:6px 6px 0 0; background:linear-gradient(to top, var(--teal), var(--gold)); min-height:10px; position:relative; cursor:pointer; transition:.2s; }
+.rev-bar:hover { opacity:.85; }
+.rev-bar .tooltip { position:absolute; bottom:calc(100%+8px); left:50%; transform:translateX(-50%); background:var(--navy); border:1px solid var(--border); padding:5px 10px; border-radius:8px; font-size:.72rem; white-space:nowrap; pointer-events:none; opacity:0; transition:.2s; }
+.rev-bar:hover .tooltip { opacity:1; }
+.chart-labels { display:flex; gap:8px; margin-top:8px; }
+.chart-lbl { flex:1; text-align:center; font-size:.65rem; color:var(--text-muted); }
+
+.students-table-wrap { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.table-header { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border); }
+.table-title { font-weight:800; }
+.table-actions { display:flex; gap:10px; align-items:center; }
+.search-input { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:8px 14px; color:var(--white); font-family:'Cairo',sans-serif; font-size:.82rem; width:200px; direction:rtl; }
+.search-input:focus { outline:none; border-color:var(--teal); }
+
+.status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.status-dot.online  { background:var(--success); box-shadow:0 0 6px var(--success); }
+.status-dot.offline { background:var(--text-muted); }
+
+.action-cell { display:flex; gap:6px; }
+
+.live-count {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(0,220,130,.08); border:1px solid rgba(0,220,130,.2);
+  padding:6px 14px; border-radius:8px; font-size:.82rem; color:var(--success);
+}
+.live-dot { width:8px;height:8px;border-radius:50%;background:var(--success);animation:notifPulse 1.5s infinite; }
+
+.section-tabs { display:flex; gap:4px; background:rgba(255,255,255,.04); border-radius:10px; padding:4px; margin-bottom:24px; width:fit-content; }
+.sec-tab { padding:8px 20px; border-radius:8px; font-size:.85rem; font-weight:700; cursor:pointer; color:var(--text-muted); border:none; background:transparent; font-family:'Cairo',sans-serif; transition:all .2s; }
+.sec-tab.active { background:var(--navy2); color:var(--white); }
+
+.codes-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.code-item { background:rgba(255,255,255,.04); border:1px dashed var(--border); border-radius:12px; padding:16px; text-align:center; }
+.code-val { font-family:monospace; font-size:1.1rem; font-weight:800; letter-spacing:2px; color:var(--gold); }
+.code-meta { font-size:.72rem; color:var(--text-muted); margin-top:6px; }
+
+.notif-panel-custom {
+  position:absolute; top:calc(100%+12px); left:0; width:340px;
+  background:var(--navy); border:1px solid var(--border); border-radius:16px;
+  padding:4px; z-index:200; opacity:0; visibility:hidden; transform:translateY(-8px);
+  transition:all .2s; box-shadow:var(--shadow);
+}
+.notif-panel-custom.open { opacity:1; visibility:visible; transform:translateY(0); }
+.notif-panel-header { padding:14px 16px; border-bottom:1px solid var(--border); font-weight:700; font-size:.9rem; display:flex; justify-content:space-between; }
+#notif-list { padding:4px; max-height:300px; overflow-y:auto; }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<div class="app-layout" style="position:relative;z-index:1">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🎓</div>
+      <div>
+        <div class="sidebar-logo-text">أستاذ صالح</div>
+        <div class="sidebar-logo-sub">لوحة التحكم</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">الرئيسية</div>
+      <button class="nav-item active" data-page="admin-dashboard.html" onclick="showSection('dashboard')">
+        <span class="nav-icon">📊</span> لوحة التحكم
+      </button>
+      <button class="nav-item" onclick="showSection('students')">
+        <span class="nav-icon">👥</span> الطلاب
+        <span class="nav-badge"><span class="badge badge-teal">4,200</span></span>
+      </button>
+      <button class="nav-item" onclick="showSection('courses')">
+        <span class="nav-icon">📚</span> الكورسات والحصص
+      </button>
+
+      <div class="nav-section-label">المالية</div>
+      <button class="nav-item" onclick="showSection('codes')">
+        <span class="nav-icon">🎟️</span> الأكواد
+      </button>
+      <button class="nav-item" onclick="showSection('payments')">
+        <span class="nav-icon">💳</span> الطلبات المعلقة
+        <span class="nav-badge"><span class="badge badge-warning">3</span></span>
+      </button>
+
+      <div class="nav-section-label">الامتحانات</div>
+      <button class="nav-item" onclick="showSection('exams')">
+        <span class="nav-icon">📝</span> الامتحانات
+      </button>
+      <button class="nav-item" onclick="showSection('questions')">
+        <span class="nav-icon">❓</span> بنك الأسئلة
+      </button>
+
+      <div class="nav-section-label">النظام</div>
+      <button class="nav-item" onclick="showSection('reports')">
+        <span class="nav-icon">📈</span> التقارير
+      </button>
+      <button class="nav-item" onclick="showSection('settings')">
+        <span class="nav-icon">⚙️</span> الإعدادات
+      </button>
+      <button class="nav-item" id="logout-btn">
+        <span class="nav-icon">🚪</span> تسجيل الخروج
+      </button>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="avatar avatar-md" id="sidebar-user-avatar">ص</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebar-user-name">أستاذ صالح حسين</div>
+        <div class="sidebar-user-role" id="sidebar-user-role">مدرس اللغة العربية</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <button class="btn btn-ghost btn-icon" id="sidebar-toggle">☰</button>
+      <h1 class="topbar-title" id="page-title">لوحة التحكم</h1>
+      <div class="topbar-actions">
+        <div class="live-count"><span class="live-dot"></span> <span id="live-num">318</span> طالب نشط الآن</div>
+
+        <!-- Notifications -->
+        <div class="dropdown" style="position:relative">
+          <button class="btn btn-ghost btn-icon" id="notif-btn" style="position:relative">
+            🔔 <span style="position:absolute;top:6px;left:6px;width:8px;height:8px;border-radius:50%;background:var(--danger)" id="notif-badge-dot"></span>
+          </button>
+          <div class="notif-panel-custom" id="notif-panel">
+            <div class="notif-panel-header">
+              <span>الإشعارات</span>
+              <span class="badge badge-danger" id="notif-badge">2</span>
+            </div>
+            <div id="notif-list"></div>
+          </div>
+        </div>
+
+        <a href="index.html" class="btn btn-ghost btn-sm">← الرئيسية</a>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+      <!-- ─── DASHBOARD ─── -->
+      <div id="sec-dashboard">
+        <!-- KPIs -->
+        <div class="kpi-grid animate-in">
+          <div class="card kpi-card card-top-line gold">
+            <span class="kpi-icon">💰</span>
+            <span class="kpi-val gold-text" id="kpi-today">0</span>
+            <div class="kpi-lbl">إيرادات اليوم (ج.م)</div>
+            <span class="kpi-change up">↑ 12% عن أمس</span>
+          </div>
+          <div class="card kpi-card card-top-line teal">
+            <span class="kpi-icon">👥</span>
+            <span class="kpi-val teal-text" id="kpi-students">0</span>
+            <div class="kpi-lbl">إجمالي الطلاب</div>
+            <span class="kpi-change up">↑ 47 هذا الأسبوع</span>
+          </div>
+          <div class="card kpi-card card-top-line green">
+            <span class="kpi-icon">📚</span>
+            <span class="kpi-val success-text">380</span>
+            <div class="kpi-lbl">إجمالي الحصص</div>
+            <span class="kpi-change up">↑ 3 هذا الأسبوع</span>
+          </div>
+          <div class="card kpi-card card-top-line red">
+            <span class="kpi-icon">📝</span>
+            <span class="kpi-val" style="color:var(--warning)">12</span>
+            <div class="kpi-lbl">اعتراضات امتحانات</div>
+            <span class="kpi-change down">تحتاج مراجعة</span>
+          </div>
+        </div>
+
+        <div class="grid-2 animate-in animate-delay-2">
+          <!-- Revenue Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <span class="chart-title">📈 الإيرادات - آخر 7 أيام</span>
+              <span class="badge badge-success">↑ 18%</span>
+            </div>
+            <div class="rev-chart" id="rev-chart"></div>
+            <div class="chart-labels" id="chart-labels"></div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="chart-card">
+            <div class="chart-header"><span class="chart-title">⚡ إجراءات سريعة</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <button class="btn btn-teal" onclick="UI.toast('فتح رفع الفيديو...','info')">📤 رفع حصة</button>
+              <button class="btn btn-primary" onclick="showSection('questions')">➕ إضافة سؤال</button>
+              <button class="btn btn-ghost" onclick="showSection('codes')">🎟️ توليد أكواد</button>
+              <button class="btn btn-ghost" onclick="sendNotif()">📢 إرسال إشعار</button>
+              <button class="btn btn-ghost" onclick="UI.toast('تصدير Excel...','info')">📊 تصدير Excel</button>
+              <button class="btn btn-ghost" onclick="showSection('payments')">💰 طلبات الدفع</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students mini table -->
+        <div class="students-table-wrap animate-in animate-delay-3 mt-24">
+          <div class="table-header">
+            <span class="table-title">👥 أحدث الطلاب</span>
+            <button class="btn btn-ghost btn-sm" onclick="showSection('students')">عرض الكل</button>
+          </div>
+          <div class="table-wrap" id="mini-students-table"></div>
+        </div>
+      </div>
+
+      <!-- ─── STUDENTS ─── -->
+      <div id="sec-students" style="display:none">
+        <div class="students-table-wrap animate-in">
+          <div class="table-header">
+            <span class="table-title">👥 إدارة الطلاب</span>
+            <div class="table-actions">
+              <input class="search-input" type="text" placeholder="🔍 بحث بالاسم أو الرقم..." oninput="filterStudents(this.value)" id="student-search">
+              <button class="btn btn-teal btn-sm" onclick="UI.toast('تصدير Excel...','info')">📊 Excel</button>
+              <button class="btn btn-primary btn-sm" onclick="openAddStudent()">➕ إضافة طالب</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="students-table">
+              <thead><tr>
+                <th>#</th><th>الاسم</th><th>الموبايل</th><th>المرحلة</th>
+                <th>الجهاز</th><th>الرصيد</th><th>الحالة</th><th>الإجراءات</th>
+              </tr></thead>
+              <tbody id="students-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── COURSES ─── -->
+      <div id="sec-courses" style="display:none">
+        <div class="flex justify-between items-center mb-24">
+          <h2 style="font-size:1.2rem">📚 الكورسات والحصص</h2>
+          <button class="btn btn-primary" onclick="UI.toast('فتح نموذج إضافة كورس','info')">➕ كورس جديد</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" id="courses-grid"></div>
+      </div>
+
+      <!-- ─── CODES ─── -->
+      <div id="sec-codes" style="display:none">
+        <div class="flex justify-between items-center mb-24">
+          <h2>🎟️ إدارة الأكواد</h2>
+          <button class="btn btn-primary" onclick="generateCodes()">⚡ توليد أكواد جديدة</button>
+        </div>
+        <div class="grid-2 mb-24">
+          <div class="card">
+            <h3 class="mb-16" style="font-size:.95rem">إعدادات التوليد</h3>
+            <div class="form-group">
+              <label class="form-label">نوع الكود</label>
+              <select class="form-select" id="code-type">
+                <option>كود حصص (شهري)</option>
+                <option>كود ترم كامل</option>
+                <option>كود مراجعة نهائية</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">عدد الأكواد</label>
+              <input class="form-input" type="number" id="code-count" value="50" min="1" max="1000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">القيمة (ج.م)</label>
+              <input class="form-input" type="number" id="code-price" value="150">
+            </div>
+            <button class="btn btn-primary w-full" onclick="generateCodes()">⚡ توليد</button>
+          </div>
+          <div class="card">
+            <h3 class="mb-16" style="font-size:.95rem">إحصائيات الأكواد</h3>
+            <div class="grid-2">
+              <div class="stat-box"><span class="stat-val gold-text">1,240</span><div class="stat-lbl">أكواد مولّدة</div></div>
+              <div class="stat-box"><span class="stat-val success-text">987</span><div class="stat-lbl">مستخدمة</div></div>
+              <div class="stat-box"><span class="stat-val teal-text">253</span><div class="stat-lbl">متبقية</div></div>
+              <div class="stat-box"><span class="stat-val" style="color:var(--warning)">12</span><div class="stat-lbl">منتهية الصلاحية</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="flex justify-between items-center mb-16">
+            <span style="font-weight:700">أكواد مولّدة حديثاً</span>
+            <button class="btn btn-ghost btn-sm" onclick="UI.toast('طباعة PDF...','info')">🖨️ طباعة PDF</button>
+          </div>
+          <div class="codes-grid" id="codes-grid"></div>
+        </div>
+      </div>
+
+      <!-- ─── PAYMENTS ─── -->
+      <div id="sec-payments" style="display:none">
+        <h2 class="mb-24">💳 الطلبات المعلقة</h2>
+        <div class="students-table-wrap">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>الطالب</th><th>المبلغ</th><th>طريقة الدفع</th><th>التاريخ</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="flex items-center gap-8"><div class="avatar avatar-sm">م</div>محمد كريم</div></td>
+                  <td class="gold-text font-700">150 ج.م</td>
+                  <td><span class="badge badge-warning">تحويل بنكي</span></td>
+                  <td>اليوم، 2:30 م</td>
+                  <td><span class="badge badge-warning">⏳ بانتظار التأكيد</span></td>
+                  <td><div class="action-cell">
+                    <button class="btn btn-sm" style="background:rgba(0,220,130,.15);color:var(--success);border:1px solid rgba(0,220,130,.3)" onclick="UI.toast('تم قبول الطلب ✅','success')">قبول</button>
+                    <button class="btn btn-sm btn-danger" onclick="UI.toast('تم رفض الطلب','danger')">رفض</button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td><div class="flex items-center gap-8"><div class="avatar avatar-sm">س</div>سارة هانى</div></td>
+                  <td class="gold-text">80 ج.م</td>
+                  <td><span class="badge badge-teal">فودافون كاش</span></td>
+                  <td>أمس، 11:20 ص</td>
+                  <td><span class="badge badge-warning">⏳ بانتظار التأكيد</span></td>
+                  <td><div class="action-cell">
+                    <button class="btn btn-sm" style="background:rgba(0,220,130,.15);color:var(--success);border:1px solid rgba(0,220,130,.3)" onclick="UI.toast('تم قبول الطلب ✅','success')">قبول</button>
+                    <button class="btn btn-sm btn-danger" onclick="UI.toast('تم رفض الطلب','danger')">رفض</button>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── EXAMS ─── -->
+      <div id="sec-exams" style="display:none">
+        <div class="flex justify-between items-center mb-24">
+          <h2>📝 الامتحانات</h2>
+          <button class="btn btn-primary" onclick="UI.toast('فتح نموذج إنشاء امتحان','info')">➕ امتحان جديد</button>
+        </div>
+        <div style="display:grid;gap:16px" id="exams-list"></div>
+      </div>
+
+      <!-- ─── QUESTIONS ─── -->
+      <div id="sec-questions" style="display:none">
+        <div class="flex justify-between items-center mb-24">
+          <h2>❓ بنك الأسئلة</h2>
+          <button class="btn btn-primary" onclick="openAddQuestion()">➕ سؤال جديد</button>
+        </div>
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">نص السؤال</label>
+            <textarea class="form-textarea" id="q-text" placeholder="اكتب السؤال هنا..."></textarea>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">الإجابة الصحيحة</label>
+              <input class="form-input" id="q-correct" type="text" placeholder="الإجابة الصحيحة">
+            </div>
+            <div class="form-group">
+              <label class="form-label">مستوى الصعوبة</label>
+              <select class="form-select">
+                <option>سهل</option><option>متوسط</option><option>صعب</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <input class="form-input" placeholder="الاختيار ب">
+            <input class="form-input" placeholder="الاختيار ج">
+            <input class="form-input" placeholder="الاختيار د">
+          </div>
+          <button class="btn btn-primary" onclick="addQuestion()">💾 حفظ السؤال</button>
+        </div>
+      </div>
+
+      <!-- ─── REPORTS ─── -->
+      <div id="sec-reports" style="display:none">
+        <h2 class="mb-24">📈 التقارير والإحصائيات</h2>
+        <div class="kpi-grid">
+          <div class="card kpi-card"><span class="kpi-icon">📅</span><span class="kpi-val gold-text">1,240,000</span><div class="kpi-lbl">إيرادات الشهر (ج.م)</div></div>
+          <div class="card kpi-card"><span class="kpi-icon">👁️</span><span class="kpi-val teal-text">48,200</span><div class="kpi-lbl">مشاهدة هذا الأسبوع</div></div>
+          <div class="card kpi-card"><span class="kpi-icon">📊</span><span class="kpi-val success-text">78%</span><div class="kpi-lbl">متوسط درجات الامتحانات</div></div>
+          <div class="card kpi-card"><span class="kpi-icon">🔄</span><span class="kpi-val" style="color:var(--warning)">92%</span><div class="kpi-lbl">معدل إعادة الاشتراك</div></div>
+        </div>
+        <div class="alert alert-info mt-24">📊 يمكنك تصدير أي تقرير بصيغة Excel/CSV بالضغط على الزر</div>
+        <div class="flex gap-12">
+          <button class="btn btn-ghost" onclick="UI.toast('تصدير تقرير الطلاب...','info')">📊 تقرير الطلاب</button>
+          <button class="btn btn-ghost" onclick="UI.toast('تصدير تقرير المالية...','info')">💰 تقرير المالية</button>
+          <button class="btn btn-ghost" onclick="UI.toast('تصدير تقرير الامتحانات...','info')">📝 تقرير الامتحانات</button>
+        </div>
+      </div>
+
+      <!-- ─── SETTINGS ─── -->
+      <div id="sec-settings" style="display:none">
+        <h2 class="mb-24">⚙️ الإعدادات</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="mb-20" style="font-size:.95rem">معلومات المنصة</h3>
+            <div class="form-group"><label class="form-label">اسم المنصة</label><input class="form-input" value="منصة أستاذ صالح حسين"></div>
+            <div class="form-group"><label class="form-label">رقم واتساب الدعم</label><input class="form-input" value="+201012345678"></div>
+            <div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="form-input" value="saleh@arabic.edu.eg"></div>
+            <button class="btn btn-primary" onclick="UI.toast('تم حفظ الإعدادات ✅','success')">💾 حفظ</button>
+          </div>
+          <div class="card">
+            <h3 class="mb-20" style="font-size:.95rem">إعدادات الأمان</h3>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <label class="flex items-center gap-12 cursor-pointer"><input type="checkbox" checked style="accent-color:var(--teal)"><span style="font-size:.88rem">منع تسجيل الشاشة</span></label>
+              <label class="flex items-center gap-12 cursor-pointer"><input type="checkbox" checked style="accent-color:var(--teal)"><span style="font-size:.88rem">حظر VPN</span></label>
+              <label class="flex items-center gap-12 cursor-pointer"><input type="checkbox" checked style="accent-color:var(--teal)"><span style="font-size:.88rem">Canvas Fingerprinting</span></label>
+              <label class="flex items-center gap-12 cursor-pointer"><input type="checkbox" style="accent-color:var(--teal)"><span style="font-size:.88rem">توثيق بخطوتين (2FA)</span></label>
+              <label class="flex items-center gap-12 cursor-pointer"><input type="checkbox" checked style="accent-color:var(--teal)"><span style="font-size:.88rem">تسجيل خروج تلقائي (30 دقيقة)</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+
+    <footer class="platform-footer" id="platform-footer"></footer>
+  </div>
+</div>
+
+<!-- ADD STUDENT MODAL -->
+<div class="modal-overlay" id="add-student-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">➕ إضافة طالب جديد</span>
+      <button class="modal-close" onclick="closeModal('add-student-modal')">×</button>
+    </div>
+    <div class="form-group"><label class="form-label">الاسم بالكامل</label><input class="form-input" placeholder="اسم الطالب"></div>
+    <div class="form-group"><label class="form-label">رقم الموبايل</label><input class="form-input" type="tel" placeholder="01XXXXXXXXX"></div>
+    <div class="form-group"><label class="form-label">المرحلة الدراسية</label><select class="form-select"><option>الأول الثانوي</option><option>الثاني الثانوي</option><option>الثالث الثانوي</option></select></div>
+    <div class="form-group"><label class="form-label">كلمة المرور الأولية</label><input class="form-input" type="password" placeholder="••••••••"></div>
+    <div class="flex gap-12">
+      <button class="btn btn-ghost flex-1" onclick="closeModal('add-student-modal')">إلغاء</button>
+      <button class="btn btn-primary flex-1" onclick="saveStudent()">💾 إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND NOTIF MODAL -->
+<div class="modal-overlay" id="send-notif-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📢 إرسال إشعار</span>
+      <button class="modal-close" onclick="closeModal('send-notif-modal')">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">إرسال إلى</label>
+      <select class="form-select"><option>كل الطلاب</option><option>طلاب لم يشاهدوا آخر حصة</option><option>طلاب الإسكندرية</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">نص الإشعار</label><textarea class="form-textarea" placeholder="اكتب رسالتك هنا..."></textarea></div>
+    <div class="form-group">
+      <label class="form-label">طريقة الإرسال</label>
+      <div class="flex gap-12">
+        <label class="flex items-center gap-8 cursor-pointer"><input type="checkbox" checked style="accent-color:var(--teal)"> <span style="font-size:.85rem">Push Notification</span></label>
+        <label class="flex items-center gap-8 cursor-pointer"><input type="checkbox" style="accent-color:var(--teal)"> <span style="font-size:.85rem">SMS</span></label>
+        <label class="flex items-center gap-8 cursor-pointer"><input type="checkbox" style="accent-color:var(--teal)"> <span style="font-size:.85rem">واتساب</span></label>
+      </div>
+    </div>
+    <div class="flex gap-12">
+      <button class="btn btn-ghost flex-1" onclick="closeModal('send-notif-modal')">إلغاء</button>
+      <button class="btn btn-primary flex-1" onclick="UI.toast('تم إرسال الإشعار لجميع الطلاب ✅','success');closeModal('send-notif-modal')">📢 إرسال</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+Platform.login('admin');
+let allStudents = [...Platform.db.students];
+
+const days = ['الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت','الأحد'];
+const revData = Platform.db.revenue.chart;
+
+function initDashboard() {
+  // Animate KPIs
+  setTimeout(() => {
+    UI.animateValue(document.getElementById('kpi-today'), 0, Platform.db.revenue.today);
+    UI.animateValue(document.getElementById('kpi-students'), 0, 4200);
+  }, 300);
+
+  // Revenue chart
+  const max = Math.max(...revData);
+  const chart = document.getElementById('rev-chart');
+  const labels = document.getElementById('chart-labels');
+  if (chart) {
+    chart.innerHTML = revData.map((v, i) => `
+      <div class="rev-bar" style="height:${Math.round((v/max)*100)}%">
+        <div class="tooltip">${UI.formatNum(v)} ج.م</div>
+      </div>`).join('');
+  }
+  if (labels) labels.innerHTML = days.map(d => `<div class="chart-lbl">${d}</div>`).join('');
+
+  // Mini students table
+  renderStudentsTable('mini-students-table', allStudents.slice(0,3));
+}
+
+function renderStudentsTable(id, data) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = `<table>
+    <thead><tr><th>#</th><th>الاسم</th><th>الموبايل</th><th>المرحلة</th><th>الجهاز</th><th>الرصيد</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+    <tbody>${data.map((s, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td><div class="flex items-center gap-8"><div class="avatar avatar-sm">${s.name[0]}</div>${s.name}</div></td>
+        <td style="direction:ltr;text-align:right">${s.phone}</td>
+        <td><span class="badge badge-teal">${s.grade}</span></td>
+        <td style="font-size:.78rem;color:var(--text-muted)">${s.device}</td>
+        <td class="gold-text">${s.wallet} ج.م</td>
+        <td><span class="status-dot ${s.active ? 'online' : 'offline'}"></span> ${s.active ? 'نشط' : 'غير نشط'}</td>
+        <td><div class="action-cell">
+          <button class="btn btn-sm btn-ghost" onclick="UI.toast('تعديل بيانات ${s.name}','info')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="banStudent(${s.id})">🚫</button>
+        </div></td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function filterStudents(q) {
+  const filtered = allStudents.filter(s => s.name.includes(q) || s.phone.includes(q));
+  renderStudentsTable('students-table', filtered);
+}
+
+function renderCourses() {
+  const grid = document.getElementById('courses-grid');
+  if (!grid) return;
+  grid.innerHTML = Platform.db.courses.map(c => `
+    <div class="card card-glow">
+      <div style="font-size:2.5rem;text-align:center;margin-bottom:16px">${c.thumbnail}</div>
+      <h3 style="font-size:1rem;text-align:center;margin-bottom:6px">${c.title}</h3>
+      <div class="flex justify-between mt-16" style="font-size:.78rem;color:var(--text-muted)">
+        <span>📚 ${c.lessons} حصة</span>
+        <span>👥 ${UI.formatNum(c.students)} طالب</span>
+        <span>⭐ ${c.rating}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="flex justify-between items-center">
+        <span class="gold-text" style="font-weight:800">${c.price} ج.م</span>
+        <div class="flex gap-8">
+          <button class="btn btn-sm btn-ghost" onclick="UI.toast('فتح كورس ${c.title}','info')">📖 عرض</button>
+          <button class="btn btn-sm btn-primary" onclick="UI.toast('رفع حصة لـ ${c.title}','info')">📤 رفع</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderCodes() {
+  const grid = document.getElementById('codes-grid');
+  if (!grid) return;
+  const codes = Array.from({length:9}, (_, i) => {
+    const code = 'SA-' + Math.random().toString(36).toUpperCase().slice(2,8);
+    return `<div class="code-item"><div class="code-val">${code}</div><div class="code-meta">150 ج.م • صالح لشهر • غير مستخدم</div></div>`;
+  });
+  grid.innerHTML = codes.join('');
+}
+
+function renderExams() {
+  const list = document.getElementById('exams-list');
+  if (!list) return;
+  list.innerHTML = Platform.db.exams.map(e => `
+    <div class="card card-glow">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-12">
+          <div style="font-size:1.5rem">📝</div>
+          <div>
+            <div style="font-weight:800">${e.title}</div>
+            <div style="font-size:.78rem;color:var(--text-muted)">${e.questions} سؤال • ${e.time} دقيقة • ${UI.formatDate(e.date)}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-16">
+          <div class="text-center">
+            <div style="font-weight:800;color:var(--teal)">${e.attempts}</div>
+            <div style="font-size:.7rem;color:var(--text-muted)">محاولة</div>
+          </div>
+          <div class="text-center">
+            <div style="font-weight:800;color:var(--gold)">${e.avgScore}%</div>
+            <div style="font-size:.7rem;color:var(--text-muted)">متوسط</div>
+          </div>
+          <div class="flex gap-8">
+            <button class="btn btn-sm btn-ghost" onclick="UI.toast('عرض نتائج ${e.title}','info')">📊 النتائج</button>
+            <button class="btn btn-sm btn-teal" onclick="window.location.href='exam.html'">📝 دخول</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function generateCodes() {
+  UI.toast('تم توليد الأكواد بنجاح! ✅','success');
+  renderCodes();
+}
+
+function banStudent(id) {
+  UI.confirm('هل تريد حظر هذا الطالب؟', () => {
+    const s = allStudents.find(x => x.id === id);
+    if (s) s.active = false;
+    renderStudentsTable('students-tbody', allStudents);
+    UI.toast('تم حظر الطالب 🚫','danger');
+  });
+}
+
+function openAddStudent() { document.getElementById('add-student-modal').classList.add('open'); }
+function saveStudent() {
+  UI.toast('تم إضافة الطالب بنجاح ✅','success');
+  closeModal('add-student-modal');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function sendNotif() { document.getElementById('send-notif-modal').classList.add('open'); }
+
+function addQuestion() {
+  const q = document.getElementById('q-text').value;
+  if (!q.trim()) { UI.toast('اكتب نص السؤال','danger'); return; }
+  UI.toast('تم حفظ السؤال في بنك الأسئلة ✅','success');
+  document.getElementById('q-text').value = '';
+}
+
+function openAddQuestion() { showSection('questions'); }
+
+const sections = ['dashboard','students','courses','codes','payments','exams','questions','reports','settings'];
+const titles   = { dashboard:'لوحة التحكم', students:'إدارة الطلاب', courses:'الكورسات والحصص', codes:'إدارة الأكواد', payments:'الطلبات المعلقة', exams:'الامتحانات', questions:'بنك الأسئلة', reports:'التقارير', settings:'الإعدادات' };
+
+function showSection(name) {
+  sections.forEach(s => {
+    const el = document.getElementById(`sec-${s}`);
+    if (el) el.style.display = s === name ? 'block' : 'none';
+  });
+  document.getElementById('page-title').textContent = titles[name] || '';
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+  if (name === 'students') { renderStudentsTable('students-tbody', allStudents); }
+  if (name === 'courses')  renderCourses();
+  if (name === 'codes')    renderCodes();
+  if (name === 'exams')    renderExams();
+}
+
+// Simulate live count
+setInterval(() => {
+  const el = document.getElementById('live-num');
+  if (el) { const v = 300 + Math.floor(Math.random()*40); el.textContent = v; }
+}, 5000);
+
+document.addEventListener('DOMContentLoaded', () => {
+  Platform.login('admin');
+  initDashboard();
+  renderFooter();
+  initSidebar();
+  initNotifications();
+});
+</script>
+</body>
+</html>

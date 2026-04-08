@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول | منصة أستاذ صالح</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.auth-page { min-height:100vh; display:flex; align-items:stretch; }
+
+.auth-visual {
+  flex:1; background:linear-gradient(135deg,var(--deep2),var(--navy));
+  border-left:1px solid var(--border); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:60px 48px;
+  position:relative; overflow:hidden;
+}
+.auth-visual::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(circle at 30% 40%,rgba(0,180,216,.08),transparent 60%),
+             radial-gradient(circle at 70% 70%,rgba(212,175,55,.06),transparent 60%);
+}
+.auth-visual-content { position:relative; z-index:1; text-align:center; }
+.auth-logo { font-size:4rem; margin-bottom:24px; animation:logoFloat 4s ease-in-out infinite; }
+@keyframes logoFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.auth-platform-name { font-family:'Tajawal',sans-serif; font-size:2rem; font-weight:900; margin-bottom:8px; }
+.auth-platform-sub { color:var(--text-muted); font-size:.95rem; margin-bottom:48px; }
+
+.feature-list { display:flex; flex-direction:column; gap:14px; text-align:right; }
+.feature-item { display:flex; align-items:center; gap:12px; }
+.feature-item .icon { width:36px;height:36px;border-radius:10px;background:rgba(0,180,216,.12);border:1px solid rgba(0,180,216,.25);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0; }
+.feature-item .text { font-size:.88rem; color:var(--text-soft); }
+
+.auth-form-side {
+  width:480px; flex-shrink:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:60px 48px;
+}
+.auth-form-wrap { width:100%; max-width:380px; }
+
+.auth-tabs { display:flex; gap:4px; background:rgba(255,255,255,.05); border-radius:12px; padding:4px; margin-bottom:32px; }
+.auth-tab {
+  flex:1; padding:10px; border-radius:9px; text-align:center; font-size:.9rem;
+  font-weight:700; cursor:pointer; transition:all .25s; border:none; background:transparent; color:var(--text-muted);
+  font-family:'Cairo',sans-serif;
+}
+.auth-tab.active { background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:var(--deep); }
+
+.auth-welcome { margin-bottom:28px; }
+.auth-welcome h2 { font-size:1.6rem; margin-bottom:6px; }
+.auth-welcome p { color:var(--text-muted); font-size:.88rem; }
+
+.otp-row { display:flex; gap:8px; }
+.otp-send { flex-shrink:0; }
+
+.role-select { display:flex; gap:10px; margin-bottom:20px; }
+.role-card {
+  flex:1; padding:16px 12px; border-radius:12px; border:2px solid rgba(255,255,255,.08);
+  text-align:center; cursor:pointer; transition:all .25s;
+}
+.role-card.selected-teacher { border-color:var(--gold); background:rgba(212,175,55,.08); }
+.role-card.selected-student { border-color:var(--teal); background:rgba(0,180,216,.08); }
+.role-card .role-icon { font-size:1.6rem; margin-bottom:8px; }
+.role-card .role-label { font-size:.82rem; font-weight:700; }
+.role-card .role-sub { font-size:.7rem; color:var(--text-muted); margin-top:2px; }
+
+.strength-meter { height:4px; border-radius:10px; background:rgba(255,255,255,.07); margin-top:6px; overflow:hidden; }
+.strength-fill { height:100%; border-radius:10px; transition:all .3s; }
+
+.social-login { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px; }
+.social-btn {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:11px; border-radius:10px; border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04); cursor:pointer; font-size:.84rem;
+  font-family:'Cairo',sans-serif; color:var(--text-soft); transition:all .25s; font-weight:600;
+}
+.social-btn:hover { background:rgba(255,255,255,.08); color:var(--white); }
+
+.auth-footer { margin-top:24px; text-align:center; font-size:.8rem; color:var(--text-muted); }
+.auth-footer a { color:var(--teal); text-decoration:none; }
+
+.phone-prefix {
+  display:flex; align-items:center; gap:0; border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--radius-sm); overflow:hidden; background:rgba(255,255,255,.05);
+  transition:all .3s;
+}
+.phone-prefix:focus-within { border-color:var(--teal); box-shadow:0 0 0 3px rgba(0,180,216,.12); background:rgba(0,180,216,.04); }
+.prefix-flag { padding:13px 14px; background:rgba(255,255,255,.06); border-left:1px solid rgba(255,255,255,.1); color:var(--text-muted); font-size:.85rem; white-space:nowrap; }
+.prefix-input { flex:1; background:transparent; border:none; outline:none; padding:13px 14px; color:var(--white); font-family:'Cairo',sans-serif; font-size:.92rem; direction:ltr; }
+
+.otp-digits { display:flex; gap:8px; justify-content:center; margin:20px 0; direction:ltr; }
+.otp-digit {
+  width:48px; height:52px; border-radius:10px; border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05); text-align:center; font-size:1.3rem; font-weight:700;
+  color:var(--white); outline:none; transition:all .2s; font-family:'Cairo',sans-serif;
+}
+.otp-digit:focus { border-color:var(--teal); box-shadow:0 0 0 3px rgba(0,180,216,.12); }
+
+/* Step indicator */
+.steps { display:flex; gap:8px; align-items:center; margin-bottom:28px; }
+.step { width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;border:2px solid rgba(255,255,255,.1);color:var(--text-muted); }
+.step.done { background:var(--success); border-color:var(--success); color:#000; }
+.step.active { border-color:var(--teal); color:var(--teal); }
+.step-line { flex:1; height:2px; background:rgba(255,255,255,.08); }
+.step-line.done { background:var(--success); }
+
+@media(max-width:900px) { .auth-visual { display:none; } .auth-form-side { width:100%;padding:40px 24px; } }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<div class="auth-page" style="position:relative;z-index:1">
+  <!-- VISUAL SIDE -->
+  <div class="auth-visual">
+    <div class="auth-visual-content animate-in">
+      <div class="auth-logo">🎓</div>
+      <div class="auth-platform-name gradient-text">أستاذ صالح حسين</div>
+      <div class="auth-platform-sub">منصة تعليمية لتدريس اللغة العربية</div>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="icon">🎬</div>
+          <div class="text">فيديوهات مشفرة ومحمية بالكامل</div>
+        </div>
+        <div class="feature-item">
+          <div class="icon">📝</div>
+          <div class="text">نظام امتحانات متطور وعادل</div>
+        </div>
+        <div class="feature-item">
+          <div class="icon">📊</div>
+          <div class="text">تتبع تقدمك لحظة بلحظة</div>
+        </div>
+        <div class="feature-item">
+          <div class="icon">🏆</div>
+          <div class="text">لوحة شرف وشهادات معتمدة</div>
+        </div>
+        <div class="feature-item">
+          <div class="icon">💳</div>
+          <div class="text">دفع بفوري وفودافون كاش</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM SIDE -->
+  <div class="auth-form-side">
+    <div class="auth-form-wrap animate-in animate-delay-2">
+
+      <!-- TABS -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">تسجيل الدخول</button>
+        <button class="auth-tab" id="tab-register" onclick="switchTab('register')">حساب جديد</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="form-login">
+        <div class="auth-welcome">
+          <h2>مرحباً بعودتك 👋</h2>
+          <p>سجل دخولك للوصول لحصصك وامتحاناتك</p>
+        </div>
+
+        <!-- Role Selector -->
+        <div class="role-select" id="login-role-select">
+          <div class="role-card selected-student" data-role="student" onclick="selectLoginRole('student', this)">
+            <div class="role-icon">👨‍🎓</div>
+            <div class="role-label">طالب</div>
+            <div class="role-sub">حسابي الشخصي</div>
+          </div>
+          <div class="role-card" data-role="admin" onclick="selectLoginRole('admin', this)">
+            <div class="role-icon">👨‍🏫</div>
+            <div class="role-label">المدرس</div>
+            <div class="role-sub">لوحة التحكم</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">رقم الموبايل</label>
+          <div class="phone-prefix">
+            <span class="prefix-flag">🇪🇬 +20</span>
+            <input class="prefix-input" type="tel" id="login-phone" placeholder="01XXXXXXXXX" maxlength="11">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">كلمة المرور</label>
+          <div class="input-icon-wrap">
+            <input class="form-input" type="password" id="login-password" placeholder="••••••••">
+            <span class="input-icon" style="cursor:pointer" onclick="togglePass('login-password', this)">👁️</span>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-16" style="font-size:.82rem">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--text-soft)">
+            <input type="checkbox" style="accent-color:var(--teal)"> تذكرني
+          </label>
+          <a href="#" style="color:var(--teal);text-decoration:none">نسيت كلمة المرور؟</a>
+        </div>
+
+        <button class="btn btn-primary w-full btn-lg" onclick="handleLogin()">
+          🚀 تسجيل الدخول
+        </button>
+
+        <div class="divider-text mt-24 mb-16">أو</div>
+
+        <div class="social-login">
+          <button class="social-btn" onclick="UI.toast('جاري ربط Google...','info')">
+            <span>🔵</span> Google
+          </button>
+          <button class="social-btn" onclick="UI.toast('جاري ربط Facebook...','info')">
+            <span>🔷</span> Facebook
+          </button>
+        </div>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="form-register" style="display:none">
+        <!-- Step 1 -->
+        <div id="reg-step-1">
+          <div class="steps">
+            <div class="step active">1</div>
+            <div class="step-line"></div>
+            <div class="step">2</div>
+            <div class="step-line"></div>
+            <div class="step">3</div>
+          </div>
+          <div class="auth-welcome">
+            <h2>إنشاء حساب جديد 🎉</h2>
+            <p>أدخل بياناتك الأساسية</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">الاسم بالكامل</label>
+            <input class="form-input" id="reg-name" type="text" placeholder="مثال: محمد أحمد إبراهيم">
+          </div>
+          <div class="form-group">
+            <label class="form-label">رقم الموبايل</label>
+            <div class="phone-prefix">
+              <span class="prefix-flag">🇪🇬 +20</span>
+              <input class="prefix-input" id="reg-phone" type="tel" placeholder="01XXXXXXXXX" maxlength="11" oninput="detectOperator(this.value)">
+            </div>
+            <div class="form-hint" id="operator-hint"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">المرحلة الدراسية</label>
+            <select class="form-select" id="reg-grade">
+              <option value="">اختر المرحلة</option>
+              <option>الأول الثانوي</option>
+              <option>الثاني الثانوي</option>
+              <option>الثالث الثانوي</option>
+            </select>
+          </div>
+          <button class="btn btn-teal w-full" onclick="goStep(2)">التالي ←</button>
+        </div>
+
+        <!-- Step 2: OTP -->
+        <div id="reg-step-2" style="display:none">
+          <div class="steps">
+            <div class="step done">✓</div>
+            <div class="step-line done"></div>
+            <div class="step active">2</div>
+            <div class="step-line"></div>
+            <div class="step">3</div>
+          </div>
+          <div class="auth-welcome">
+            <h2>تأكيد رقم الموبايل 📱</h2>
+            <p>تم إرسال كود التحقق لرقمك</p>
+          </div>
+          <div class="alert alert-info">تم إرسال كود التحقق لرقم <strong id="otp-phone-display"></strong></div>
+          <div class="otp-digits">
+            <input class="otp-digit" maxlength="1" oninput="otpNext(this,0)" data-idx="0">
+            <input class="otp-digit" maxlength="1" oninput="otpNext(this,1)" data-idx="1">
+            <input class="otp-digit" maxlength="1" oninput="otpNext(this,2)" data-idx="2">
+            <input class="otp-digit" maxlength="1" oninput="otpNext(this,3)" data-idx="3">
+          </div>
+          <p style="text-align:center;font-size:.8rem;color:var(--text-muted)">لم يصلك الكود؟ <a href="#" style="color:var(--teal)" onclick="UI.toast('تم إعادة الإرسال','success')">أعد الإرسال</a></p>
+          <div class="flex gap-12 mt-16">
+            <button class="btn btn-ghost flex-1" onclick="goStep(1)">← رجوع</button>
+            <button class="btn btn-teal flex-1" onclick="goStep(3)">تحقق ✓</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Password -->
+        <div id="reg-step-3" style="display:none">
+          <div class="steps">
+            <div class="step done">✓</div>
+            <div class="step-line done"></div>
+            <div class="step done">✓</div>
+            <div class="step-line done"></div>
+            <div class="step active">3</div>
+          </div>
+          <div class="auth-welcome">
+            <h2>إنشاء كلمة المرور 🔐</h2>
+            <p>اختر كلمة مرور قوية</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">كلمة المرور</label>
+            <input class="form-input" id="reg-pass" type="password" placeholder="8 أحرف على الأقل" oninput="checkStrength(this.value)">
+            <div class="strength-meter mt-8">
+              <div class="strength-fill" id="strength-fill" style="width:0%;background:var(--danger)"></div>
+            </div>
+            <div class="form-hint" id="strength-text">اكتب كلمة المرور</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">تأكيد كلمة المرور</label>
+            <input class="form-input" id="reg-pass2" type="password" placeholder="أعد كتابة كلمة المرور">
+          </div>
+          <button class="btn btn-primary w-full btn-lg" onclick="completeRegister()">🎉 إنشاء الحساب</button>
+        </div>
+      </div>
+
+      <div class="auth-footer">
+        <div style="color:var(--text-muted);font-size:.75rem;margin-top:20px">
+          صُنعت بـ ❤️ بواسطة
+          <a href="https://omarahameds2010-lab.github.io/omar-os/certificates.html" target="_blank" style="color:var(--teal)">عمر أحمد</a>
+          | Software Engineer
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+let loginRole = 'student';
+
+function selectLoginRole(role, el) {
+  loginRole = role;
+  document.querySelectorAll('.role-card').forEach(c => { c.className = 'role-card'; });
+  el.classList.add(role === 'admin' ? 'selected-teacher' : 'selected-student');
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+}
+
+function togglePass(id, btn) {
+  const el = document.getElementById(id);
+  if (el.type === 'password') { el.type = 'text'; btn.textContent = '🙈'; }
+  else { el.type = 'password'; btn.textContent = '👁️'; }
+}
+
+function detectOperator(val) {
+  const hint = document.getElementById('operator-hint');
+  if (!val) { hint.textContent = ''; return; }
+  const prefixes = { '010':'Vodafone 📱','011':'Etisalat 📱','012':'Mobinil 📱','015':'WE 📱' };
+  const op = prefixes[val.substring(0,3)];
+  hint.textContent = op ? `✅ ${op}` : '⚠️ تأكد من صحة الرقم';
+  hint.style.color = op ? 'var(--success)' : 'var(--warning)';
+}
+
+function goStep(step) {
+  if (step === 2) {
+    const phone = document.getElementById('reg-phone').value;
+    const name  = document.getElementById('reg-name').value;
+    if (!name.trim()) { UI.toast('أدخل اسمك بالكامل','danger'); return; }
+    if (phone.length < 11) { UI.toast('أدخل رقم موبايل صحيح','danger'); return; }
+    document.getElementById('otp-phone-display').textContent = '+20' + phone;
+    UI.toast('تم إرسال كود التحقق: 1234','info');
+  }
+  if (step === 3) {
+    const digits = document.querySelectorAll('.otp-digit');
+    const code = [...digits].map(d => d.value).join('');
+    if (code.length < 4) { UI.toast('أدخل الكود كاملاً','danger'); return; }
+    UI.toast('تم التحقق بنجاح ✅','success');
+  }
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById(`reg-step-${i}`);
+    if (el) el.style.display = i === step ? 'block' : 'none';
+  }
+}
+
+function otpNext(el, idx) {
+  if (el.value && idx < 3) {
+    document.querySelectorAll('.otp-digit')[idx + 1].focus();
+  }
+}
+
+function checkStrength(val) {
+  const fill = document.getElementById('strength-fill');
+  const text = document.getElementById('strength-text');
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const levels = [
+    { w:'0%',   c:'var(--danger)',  t:'ضعيفة جداً' },
+    { w:'25%',  c:'var(--danger)',  t:'ضعيفة' },
+    { w:'50%',  c:'var(--warning)', t:'متوسطة' },
+    { w:'75%',  c:'var(--teal)',    t:'جيدة' },
+    { w:'100%', c:'var(--success)', t:'قوية جداً 💪' },
+  ];
+  const l = levels[score];
+  fill.style.width = l.w; fill.style.background = l.c;
+  text.textContent = l.t; text.style.color = l.c;
+}
+
+function completeRegister() {
+  const pass  = document.getElementById('reg-pass').value;
+  const pass2 = document.getElementById('reg-pass2').value;
+  if (pass.length < 8) { UI.toast('كلمة المرور ضعيفة جداً','danger'); return; }
+  if (pass !== pass2)  { UI.toast('كلمتا المرور غير متطابقتين','danger'); return; }
+  Platform.login('student');
+  UI.toast('تم إنشاء حسابك بنجاح! 🎉','success');
+  setTimeout(() => { window.location.href = 'student-dashboard.html'; }, 1500);
+}
+
+function handleLogin() {
+  const phone = document.getElementById('login-phone').value;
+  const pass  = document.getElementById('login-password').value;
+  if (!phone || !pass) { UI.toast('أدخل رقم الموبايل وكلمة المرور','danger'); return; }
+  Platform.login(loginRole);
+  UI.toast('تم تسجيل الدخول بنجاح! ✅','success');
+  setTimeout(() => {
+    window.location.href = loginRole === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html';
+  }, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.animate-in').forEach((el, i) => {
+    el.style.opacity = '0'; el.style.transform = 'translateY(24px)'; el.style.transition = `all .6s ${i*.1}s ease`;
+    setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'none'; }, 100 + i * 100);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منصة أستاذ صالح حسين | اللغة العربية</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ── NAV ── */
+.main-nav {
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 5%;display:flex;align-items:center;gap:24px;
+  background:rgba(7,11,21,0);backdrop-filter:blur(0);
+  border-bottom:1px solid transparent;transition:all .4s;
+}
+.main-nav.scrolled {
+  background:rgba(7,11,21,.92);backdrop-filter:blur(20px);
+  border-bottom-color:var(--border);
+}
+.nav-logo { font-family:'Tajawal',sans-serif;font-size:1.3rem;font-weight:900;text-decoration:none; }
+.nav-links { display:flex;gap:28px;list-style:none;margin-right:auto; }
+.nav-links a { color:var(--text-muted);text-decoration:none;font-size:.88rem;font-weight:600;transition:.2s; }
+.nav-links a:hover { color:var(--gold); }
+.nav-cta-wrap { display:flex;gap:10px; }
+
+/* ── HERO ── */
+.hero {
+  min-height:100vh;display:flex;align-items:center;
+  padding:120px 5% 80px;gap:60px;position:relative;z-index:1;
+}
+.hero-left { flex:1; }
+.hero-badge {
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.3);
+  padding:7px 18px;border-radius:50px;font-size:.82rem;color:var(--teal);
+  margin-bottom:28px;animation:fadeInDown .8s ease both;
+}
+.live-dot { width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite; }
+.hero-h1 { font-family:'Tajawal',sans-serif;font-size:clamp(2.4rem,5vw,4rem);font-weight:900;line-height:1.2;margin-bottom:20px;animation:fadeInDown .8s .15s ease both; }
+.hero-sub { font-size:1rem;color:var(--text-soft);line-height:1.9;max-width:520px;margin-bottom:36px;animation:fadeInDown .8s .3s ease both; }
+.hero-btns { display:flex;gap:14px;flex-wrap:wrap;animation:fadeInDown .8s .45s ease both; }
+.hero-stats { display:flex;gap:28px;margin-top:40px;animation:fadeInDown .8s .6s ease both; }
+.hero-stat { text-align:center; }
+.hero-stat .v { font-family:'Tajawal',sans-serif;font-size:1.8rem;font-weight:900; }
+.hero-stat .l { font-size:.72rem;color:var(--text-muted); }
+
+/* ── PLATFORM CARD PREVIEW ── */
+.hero-right { flex:1;display:flex;justify-content:center;animation:fadeInUp 1s .2s ease both; }
+.platform-preview { width:100%;max-width:440px;background:var(--deep2);border:1px solid var(--border);border-radius:22px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.6),0 0 60px rgba(0,180,216,.06); }
+.preview-chrome { display:flex;align-items:center;gap:8px;padding:12px 18px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border); }
+.chrome-dot { width:11px;height:11px;border-radius:50%; }
+.chrome-url { flex:1;margin:0 10px;background:rgba(255,255,255,.06);border-radius:6px;padding:5px 12px;font-size:.72rem;color:var(--text-muted);text-align:center;font-family:monospace; }
+.preview-header { padding:20px;background:linear-gradient(135deg,rgba(0,180,216,.08),rgba(212,175,55,.05));display:flex;align-items:center;gap:14px; }
+.preview-avatar { width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--teal));display:flex;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;font-size:1.4rem;font-weight:900;color:var(--deep);flex-shrink:0;box-shadow:0 4px 20px rgba(212,175,55,.4); }
+.preview-body { padding:18px; }
+.preview-mini-stats { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px; }
+.preview-stat { background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center; }
+.preview-stat .v { font-size:1.1rem;font-weight:900;color:var(--gold); }
+.preview-stat .l { font-size:.62rem;color:var(--text-muted);margin-top:2px; }
+.preview-vid { background:rgba(0,0,0,.4);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.06); }
+.preview-play { width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-dark));display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:playPulse 2s infinite;font-size:.85rem; }
+@keyframes playPulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,180,216,.4)} 50%{box-shadow:0 0 0 10px rgba(0,180,216,0)} }
+.preview-bar { height:3px;background:rgba(255,255,255,.1);border-radius:10px;margin-top:7px;overflow:hidden; }
+.preview-bar-fill { height:100%;width:35%;background:var(--teal);animation:vidFill 4s ease infinite; }
+@keyframes vidFill { 0%{width:5%} 100%{width:90%} }
+.preview-top-line { height:2px;background:linear-gradient(90deg,var(--gold),var(--teal),var(--gold));animation:lineScan 3s ease infinite; }
+@keyframes lineScan { 0%,100%{opacity:.7} 50%{opacity:1} }
+
+/* ── SECTIONS ── */
+.section { position:relative;z-index:1;padding:100px 5%; }
+.section-center { text-align:center; }
+.section-tag2 { display:inline-block;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);color:var(--gold);padding:6px 16px;border-radius:50px;font-size:.78rem;font-weight:700;margin-bottom:16px; }
+.section-h2 { font-family:'Tajawal',sans-serif;font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;margin-bottom:14px;line-height:1.3; }
+.section-sub { color:var(--text-muted);font-size:.95rem;line-height:1.8;max-width:600px;margin:0 auto; }
+
+/* ── FEATURE GRID ── */
+.feat-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px; }
+.feat-card { background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;transition:all .35s;cursor:default;position:relative;overflow:hidden; }
+.feat-card::before { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,180,216,.05),transparent);opacity:0;transition:.35s; }
+.feat-card:hover { transform:translateY(-8px);border-color:rgba(212,175,55,.4);box-shadow:0 20px 40px rgba(0,0,0,.4); }
+.feat-card:hover::before { opacity:1; }
+.feat-icon { width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,rgba(0,180,216,.15),rgba(212,175,55,.1));border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:18px; }
+.feat-title { font-size:1rem;font-weight:800;margin-bottom:8px; }
+.feat-text { font-size:.82rem;color:var(--text-muted);line-height:1.7; }
+
+/* ── STATS STRIP ── */
+.stats-strip { background:linear-gradient(135deg,var(--navy),var(--deep2));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:64px 5%;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:center;position:relative;z-index:1; }
+.ss-num { font-family:'Tajawal',sans-serif;font-size:3rem;font-weight:900;display:block;background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+.ss-lbl { color:var(--text-muted);font-size:.85rem;margin-top:6px; }
+
+/* ── SCREENS ── */
+.screens-grid { display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:56px; }
+.screen-card { background:var(--deep2);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:.35s; }
+.screen-card:hover { transform:scale(1.02);border-color:rgba(0,180,216,.3); }
+.screen-topbar { display:flex;align-items:center;gap:8px;padding:13px 18px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border); }
+.sc-dot { width:10px;height:10px;border-radius:50%; }
+.screen-body { padding:18px; }
+.mini-bars { display:flex;align-items:flex-end;gap:5px;height:60px;margin-top:10px; }
+.mini-bar { flex:1;border-radius:4px 4px 0 0;background:linear-gradient(to top,var(--teal),var(--gold));opacity:.7; }
+.mc-opt { display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:.78rem;border:1px solid var(--border);margin-bottom:6px; }
+.mc-opt.correct { border-color:var(--success);background:rgba(0,220,130,.08);color:var(--success); }
+.mc-opt.wrong   { border-color:var(--danger);background:rgba(255,71,87,.06);color:var(--danger); }
+.mini-student { display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.78rem; }
+.mini-medal { font-size:.9rem;width:20px; }
+
+/* ── HOW ── */
+.how-steps { display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:56px;position:relative; }
+.how-steps::before { content:'';position:absolute;top:32px;right:12.5%;left:12.5%;height:2px;background:linear-gradient(90deg,var(--gold),var(--teal));z-index:0; }
+.how-step { text-align:center;position:relative;z-index:1; }
+.step-circle { width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 16px;box-shadow:0 8px 24px rgba(212,175,55,.35); }
+.step-title { font-weight:800;font-size:.92rem;margin-bottom:6px; }
+.step-text  { font-size:.78rem;color:var(--text-muted);line-height:1.6; }
+
+/* ── PRICING ── */
+.pricing-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px; }
+.price-card { background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;text-align:center;transition:.35s;position:relative; }
+.price-card:hover { transform:translateY(-6px); }
+.price-card.featured { border-color:var(--gold);background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(0,180,216,.05)); }
+.price-popular { position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--deep);padding:4px 20px;border-radius:20px;font-size:.72rem;font-weight:800;white-space:nowrap; }
+.price-icon { font-size:2.5rem;margin-bottom:16px; }
+.price-name { font-weight:800;font-size:1.1rem;margin-bottom:8px; }
+.price-amount { font-family:'Tajawal',sans-serif;font-size:2.8rem;font-weight:900;color:var(--gold);margin:16px 0 4px; }
+.price-period { font-size:.78rem;color:var(--text-muted);margin-bottom:20px; }
+.price-features { list-style:none;text-align:right;margin-bottom:24px; }
+.price-features li { padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem;display:flex;align-items:center;gap:8px; }
+.price-features li::before { content:'✓';color:var(--success);font-weight:900;flex-shrink:0; }
+
+/* ── TEACHER ── */
+.teacher-section { background:linear-gradient(135deg,rgba(0,180,216,.06),rgba(212,175,55,.04));border-top:1px solid var(--border);border-bottom:1px solid var(--border); }
+.teacher-inner { display:flex;align-items:center;gap:60px;max-width:960px;margin:0 auto; }
+.teacher-avatar-big { width:160px;height:160px;border-radius:28px;background:linear-gradient(135deg,var(--gold),var(--teal));display:flex;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;font-size:4rem;font-weight:900;color:var(--deep);flex-shrink:0;box-shadow:0 20px 40px rgba(212,175,55,.3); }
+.teacher-bio { flex:1; }
+.teacher-name { font-family:'Tajawal',sans-serif;font-size:1.8rem;font-weight:900;margin-bottom:6px; }
+.teacher-role { color:var(--teal);margin-bottom:16px;font-weight:600; }
+.teacher-text { color:var(--text-soft);line-height:1.9;margin-bottom:20px;font-size:.92rem; }
+.teacher-socials { display:flex;gap:10px; }
+.social-chip { display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);font-size:.82rem;color:var(--text-soft);text-decoration:none;transition:.2s;font-weight:600; }
+.social-chip:hover { border-color:var(--gold);color:var(--gold); }
+
+/* ── TESTIMONIALS ── */
+.testimonials { display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px; }
+.testi-card { background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px; }
+.testi-stars { color:var(--gold);font-size:.9rem;margin-bottom:10px; }
+.testi-text { font-size:.85rem;color:var(--text-soft);line-height:1.7;margin-bottom:14px; }
+.testi-user { display:flex;align-items:center;gap:10px; }
+.testi-user .name { font-size:.83rem;font-weight:700; }
+.testi-user .meta { font-size:.7rem;color:var(--text-muted); }
+
+/* ── FAQ ── */
+.faq-list { max-width:720px;margin:40px auto 0; }
+.faq-item { border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden; }
+.faq-q { padding:18px 20px;cursor:pointer;font-weight:700;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;transition:.2s; }
+.faq-q:hover { background:rgba(255,255,255,.03); }
+.faq-q .arrow { transition:.3s;color:var(--teal); }
+.faq-item.open .faq-q .arrow { transform:rotate(180deg); }
+.faq-a { max-height:0;overflow:hidden;transition:.4s;font-size:.85rem;color:var(--text-muted);line-height:1.8; }
+.faq-item.open .faq-a { max-height:200px;padding:0 20px 18px; }
+
+/* ── CTA ── */
+.cta-section { text-align:center;background:linear-gradient(135deg,rgba(0,180,216,.08),rgba(212,175,55,.06));border-top:1px solid var(--border);position:relative;z-index:1; }
+.cta-glow { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,.08),transparent 70%);pointer-events:none; }
+
+/* ── FOOTER ── */
+.site-footer { background:var(--deep2);border-top:1px solid var(--border);padding:60px 5% 32px;position:relative;z-index:1; }
+.footer-grid { display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px; }
+.footer-brand .name { font-family:'Tajawal',sans-serif;font-size:1.3rem;font-weight:900;margin-bottom:10px; }
+.footer-brand .desc { font-size:.82rem;color:var(--text-muted);line-height:1.8; }
+.footer-col h4 { font-weight:800;margin-bottom:16px;font-size:.9rem; }
+.footer-col ul { list-style:none; }
+.footer-col ul li { margin-bottom:9px; }
+.footer-col ul li a { color:var(--text-muted);text-decoration:none;font-size:.82rem;transition:.2s; }
+.footer-col ul li a:hover { color:var(--gold); }
+.footer-bottom { border-top:1px solid var(--border);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px; }
+.footer-copy { font-size:.75rem;color:var(--text-muted); }
+.footer-dev-note { font-size:.75rem;color:var(--teal); }
+.footer-dev-note a { color:var(--teal);text-decoration:none;font-weight:700; }
+.footer-dev-note a:hover { text-decoration:underline; }
+
+/* ── MOBILE ── */
+@media(max-width:900px) {
+  .hero { flex-direction:column;text-align:center; }
+  .hero-sub { margin:0 auto 28px; }
+  .hero-btns { justify-content:center; }
+  .hero-stats { justify-content:center; }
+  .feat-grid { grid-template-columns:1fr; }
+  .screens-grid { grid-template-columns:1fr; }
+  .how-steps { grid-template-columns:1fr 1fr; }
+  .how-steps::before { display:none; }
+  .pricing-grid { grid-template-columns:1fr; }
+  .teacher-inner { flex-direction:column;text-align:center; }
+  .teacher-socials { justify-content:center; }
+  .testimonials { grid-template-columns:1fr; }
+  .stats-strip { grid-template-columns:1fr 1fr; }
+  .footer-grid { grid-template-columns:1fr 1fr; }
+  nav .nav-links { display:none; }
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<!-- NAV -->
+<nav class="main-nav" id="main-nav">
+  <a href="index.html" class="nav-logo gradient-text">🎓 أستاذ صالح</a>
+  <ul class="nav-links">
+    <li><a href="#features">المميزات</a></li>
+    <li><a href="#how">كيف تبدأ</a></li>
+    <li><a href="#pricing">الأسعار</a></li>
+    <li><a href="#teacher">عن المدرس</a></li>
+    <li><a href="#faq">الأسئلة الشائعة</a></li>
+  </ul>
+  <div class="nav-cta-wrap">
+    <a href="auth.html" class="btn btn-outline btn-sm">تسجيل الدخول</a>
+    <a href="auth.html" class="btn btn-primary btn-sm">🚀 ابدأ الآن</a>
+  </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-badge"><span class="live-dot"></span> أكثر من 4,200 طالب يتعلمون الآن</div>
+    <h1 class="hero-h1">
+      تعلم اللغة العربية<br>
+      مع <span class="gradient-text">أستاذ صالح حسين</span><br>
+      بأسلوب مختلف تماماً
+    </h1>
+    <p class="hero-sub">منصة تعليمية متكاملة مع فيديوهات مشفرة، امتحانات إلكترونية، ومتابعة لحظية لتقدمك — كل حاجة في مكان واحد.</p>
+    <div class="hero-btns">
+      <a href="auth.html" class="btn btn-primary btn-lg">🚀 ابدأ رحلتك الآن</a>
+      <a href="student-dashboard.html" class="btn btn-outline btn-lg">👀 تجربة المنصة</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="v gold-text" id="hs1">0</div><div class="l">طالب مسجل</div></div>
+      <div class="hero-stat" style="border-right:1px solid var(--border);border-left:1px solid var(--border);padding:0 28px"><div class="v teal-text" id="hs2">0</div><div class="l">حصة متاحة</div></div>
+      <div class="hero-stat"><div class="v success-text" id="hs3">0</div><div class="l">امتحان تم إجراؤه</div></div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="platform-preview">
+      <div class="preview-top-line"></div>
+      <div class="preview-chrome">
+        <span class="chrome-dot" style="background:#FF5F57"></span>
+        <span class="chrome-dot" style="background:#FEBC2E"></span>
+        <span class="chrome-dot" style="background:#28C840"></span>
+        <div class="chrome-url">saleh-arabic.edu.eg</div>
+        <span style="font-size:.7rem;color:var(--success)">🔒 آمن</span>
+      </div>
+      <div class="preview-header">
+        <div class="preview-avatar">ص</div>
+        <div>
+          <div style="font-weight:800;font-size:.95rem">أستاذ صالح حسين</div>
+          <div style="color:var(--teal);font-size:.75rem">مدرس اللغة العربية</div>
+          <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px">⭐ 4.9 تقييم • 380 حصة • 4,200 طالب</div>
+        </div>
+      </div>
+      <div class="preview-body">
+        <div class="preview-mini-stats">
+          <div class="preview-stat"><div class="v">82,400</div><div class="l">إيرادات اليوم</div></div>
+          <div class="preview-stat"><div class="v" style="color:var(--teal)">318</div><div class="l">نشط الآن</div></div>
+          <div class="preview-stat"><div class="v" style="color:var(--success)">97%</div><div class="l">رضا الطلاب</div></div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:5px"><span>تقدم الفصل الأول</span><span style="color:var(--teal)">78%</span></div>
+          <div class="progress-wrap"><div class="progress-fill" style="width:78%"></div></div>
+        </div>
+        <div class="preview-vid">
+          <div class="preview-play">▶</div>
+          <div style="flex:1">
+            <div style="font-size:.8rem;font-weight:700">الأسماء الستة</div>
+            <div style="font-size:.68rem;color:var(--text-muted)">الحصة الرابعة • 🔒 مشفر</div>
+            <div class="preview-bar"><div class="preview-bar-fill"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ STATS ══ -->
+<div class="stats-strip">
+  <div><span class="ss-num" data-target="4200">0</span><div class="ss-lbl">طالب مسجل</div></div>
+  <div><span class="ss-num" data-target="380">0</span><div class="ss-lbl">حصة مسجلة</div></div>
+  <div><span class="ss-num" data-target="15000">0</span><div class="ss-lbl">امتحان أُجري</div></div>
+  <div><span class="ss-num" data-target="99">0</span><div class="ss-lbl">% رضا الطلاب</div></div>
+</div>
+
+<!-- ══ FEATURES ══ -->
+<section class="section section-center" id="features">
+  <div class="section-tag2">✨ مميزات المنصة</div>
+  <h2 class="section-h2 reveal">كل اللي محتاجه <span class="gradient-text">في مكان واحد</span></h2>
+  <p class="section-sub reveal">منصة صُممت بناءً على احتياجات المدرس المصري والطالب المصري تحديداً</p>
+  <div class="feat-grid">
+    <div class="feat-card reveal">
+      <div class="feat-icon">🔐</div>
+      <div class="feat-title">فيديو مشفر بالكامل</div>
+      <div class="feat-text">تشفير DRM عالمي، علامة مائية متحركة باسم ورقم الطالب، منع تسجيل الشاشة — مستحيل أي حاجة تتسرب.</div>
+    </div>
+    <div class="feat-card reveal animate-delay-1">
+      <div class="feat-icon">📊</div>
+      <div class="feat-title">لوحة تحكم ذكية</div>
+      <div class="feat-text">إيرادات لحظية، مراقبة الطلاب، حظر بضغطة، صلاحيات للمساعدين — كل شيء في شاشة واحدة.</div>
+    </div>
+    <div class="feat-card reveal animate-delay-2">
+      <div class="feat-icon">📝</div>
+      <div class="feat-title">امتحانات متطورة</div>
+      <div class="feat-text">Lockdown Mode، حفظ تلقائي، عداد وقت، ترتيب عشوائي، وترتيبك على مستوى الجمهورية فور الانتهاء.</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon">💳</div>
+      <div class="feat-title">دفع إلكتروني متكامل</div>
+      <div class="feat-text">فوري — فودافون كاش — بطاقات بنكية — أكواد مطبوعة. فواتير PDF تلقائية لكل طالب.</div>
+    </div>
+    <div class="feat-card reveal animate-delay-1">
+      <div class="feat-icon">🧠</div>
+      <div class="feat-title">ذكاء اصطناعي وتحليلات</div>
+      <div class="feat-text">Heatmap لأصعب لحظات الفيديو، تحليل مشاعر التعليقات، كشف الغش، وتقرير سلوك الطالب.</div>
+    </div>
+    <div class="feat-card reveal animate-delay-2">
+      <div class="feat-icon">📱</div>
+      <div class="feat-title">تطبيق موبايل كامل</div>
+      <div class="feat-text">Android وiOS، إشعارات Firebase، Offline Mode، ودارك مود تلقائي. التعلم في أي وقت ومكان.</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon">🏆</div>
+      <div class="feat-title">Gamification ونقاط</div>
+      <div class="feat-text">نقاط بكل فيديو، لوحة شرف، متجر مكافآت، وشهادات إتمام بـ Blockchain لا يمكن تزويرها.</div>
+    </div>
+    <div class="feat-card reveal animate-delay-1">
+      <div class="feat-icon">🛡️</div>
+      <div class="feat-title">أمان على مستوى المؤسسات</div>
+      <div class="feat-text">OTP، منع VPN، Canvas Fingerprinting، JWT ببصمة الجهاز، حماية DDoS، وجدار حماية قوي.</div>
+    </div>
+    <div class="feat-card reveal animate-delay-2">
+      <div class="feat-icon">📡</div>
+      <div class="feat-title">بث مباشر وجدولة</div>
+      <div class="feat-text">ربط Zoom وGoogle Meet، جدولة ظهور الحصص تلقائياً، وعد تنازلي لموعد الامتحان القادم.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SCREENS ══ -->
+<section class="section">
+  <div class="section-tag2" style="display:block;text-align:center">💻 لقطات حقيقية من المنصة</div>
+  <h2 class="section-h2 text-center reveal">شاهد المنصة <span class="gradient-text">من الداخل</span></h2>
+  <div class="screens-grid reveal">
+    <div class="screen-card">
+      <div class="screen-topbar">
+        <span class="sc-dot" style="background:#FF5F57"></span><span class="sc-dot" style="background:#FEBC2E"></span><span class="sc-dot" style="background:#28C840"></span>
+        <span style="font-size:.78rem;font-weight:700;margin-right:10px">📊 لوحة تحكم المدرس</span>
+      </div>
+      <div class="screen-body">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+          <div style="background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.2);border-radius:8px;padding:10px;text-align:center"><div style="font-weight:900;color:var(--gold);font-size:1rem">82,400</div><div style="font-size:.6rem;color:var(--text-muted)">إيرادات اليوم</div></div>
+          <div style="background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);border-radius:8px;padding:10px;text-align:center"><div style="font-weight:900;color:var(--teal);font-size:1rem">318</div><div style="font-size:.6rem;color:var(--text-muted)">نشط الآن</div></div>
+          <div style="background:rgba(0,220,130,.1);border:1px solid rgba(0,220,130,.2);border-radius:8px;padding:10px;text-align:center"><div style="font-weight:900;color:var(--success);font-size:1rem">47</div><div style="font-size:.6rem;color:var(--text-muted)">اشتراك جديد</div></div>
+        </div>
+        <div class="mini-bars">
+          <div class="mini-bar" style="height:40%"></div><div class="mini-bar" style="height:65%"></div>
+          <div class="mini-bar" style="height:50%"></div><div class="mini-bar" style="height:85%"></div>
+          <div class="mini-bar" style="height:70%"></div><div class="mini-bar" style="height:95%"></div>
+          <div class="mini-bar" style="height:78%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-topbar">
+        <span class="sc-dot" style="background:#FF5F57"></span><span class="sc-dot" style="background:#FEBC2E"></span><span class="sc-dot" style="background:#28C840"></span>
+        <span style="font-size:.78rem;font-weight:700;margin-right:10px">📝 نظام الامتحانات</span>
+        <span class="badge badge-danger" style="margin-right:auto;font-size:.65rem">⏱️ 28:45</span>
+      </div>
+      <div class="screen-body">
+        <div style="font-size:.8rem;font-weight:700;color:var(--gold);margin-bottom:10px">ما إعراب "الطلابُ" في جملة: جاء الطلابُ؟</div>
+        <div class="mc-opt">أ. مفعول به منصوب</div>
+        <div class="mc-opt correct">ب. فاعل مرفوع ✅</div>
+        <div class="mc-opt wrong">ج. مبتدأ مرفوع ❌</div>
+        <div class="mc-opt">د. خبر مرفوع</div>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-topbar">
+        <span class="sc-dot" style="background:#FF5F57"></span><span class="sc-dot" style="background:#FEBC2E"></span><span class="sc-dot" style="background:#28C840"></span>
+        <span style="font-size:.78rem;font-weight:700;margin-right:10px">🎬 مشغل الفيديو المشفر</span>
+      </div>
+      <div class="screen-body">
+        <div style="background:#000;border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;margin-bottom:10px">
+          <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,120,180,.3),rgba(0,0,0,.7))"></div>
+          <div style="position:relative;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">▶</div>
+          <div style="position:absolute;top:8px;right:8px;font-size:.6rem;background:rgba(212,175,55,.85);color:#000;padding:2px 7px;border-radius:4px;font-weight:700">🔒 فاطمة • 0101</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:.8rem">▶</span>
+          <div style="flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden"><div style="height:100%;width:35%;background:var(--teal)"></div></div>
+          <span style="font-size:.7rem;color:var(--text-muted)">14:34 / 41:20</span>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <span style="font-size:.68rem;padding:3px 8px;border-radius:5px;border:1px solid var(--border);color:var(--text-muted)">0.75x</span>
+          <span style="font-size:.68rem;padding:3px 8px;border-radius:5px;border:1px solid var(--teal);color:var(--teal)">1x ✓</span>
+          <span style="font-size:.68rem;padding:3px 8px;border-radius:5px;border:1px solid var(--border);color:var(--text-muted)">720p</span>
+          <span style="font-size:.68rem;padding:3px 8px;border-radius:5px;border:1px solid var(--border);color:var(--text-muted)">PiP</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-topbar">
+        <span class="sc-dot" style="background:#FF5F57"></span><span class="sc-dot" style="background:#FEBC2E"></span><span class="sc-dot" style="background:#28C840"></span>
+        <span style="font-size:.78rem;font-weight:700;margin-right:10px">🏆 لوحة الشرف</span>
+      </div>
+      <div class="screen-body">
+        <div class="mini-student"><span class="mini-medal">🥇</span><div class="avatar avatar-sm">ف</div><span style="flex:1">فاطمة الزهراء</span><span class="gold-text" style="font-weight:800">98.5%</span></div>
+        <div class="mini-student"><span class="mini-medal">🥈</span><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#aaa,#666)">م</div><span style="flex:1">محمد إبراهيم</span><span class="teal-text" style="font-weight:800">96.0%</span></div>
+        <div class="mini-student"><span class="mini-medal">🥉</span><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#CD7F32,#8B4513)">ن</div><span style="flex:1">نور الهدى</span><span style="color:var(--warning);font-weight:800">94.5%</span></div>
+        <div class="mini-student"><span class="mini-medal" style="color:var(--text-muted)">#4</span><div class="avatar avatar-sm">ع</div><span style="flex:1">عبد الرحمن</span><span style="color:var(--text-muted);font-weight:800">93.2%</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ HOW ══ -->
+<section class="section section-center" id="how">
+  <div class="section-tag2">🚀 خطوات البداية</div>
+  <h2 class="section-h2 reveal">ابدأ في <span class="gradient-text">أقل من دقيقة</span></h2>
+  <div class="how-steps reveal">
+    <div class="how-step">
+      <div class="step-circle">📱</div>
+      <div class="step-title">سجّل بموبايلك</div>
+      <div class="step-text">أدخل رقمك وتحقق بكود OTP — بدون إيميل أو تعقيد</div>
+    </div>
+    <div class="how-step">
+      <div class="step-circle">💳</div>
+      <div class="step-title">ادفع بالطريقة اللي تناسبك</div>
+      <div class="step-text">فوري، فودافون كاش، بطاقة بنكية، أو كود مطبوع</div>
+    </div>
+    <div class="how-step">
+      <div class="step-circle">🎬</div>
+      <div class="step-title">شاهد الحصص</div>
+      <div class="step-text">فيديوهات عالية الجودة مشفرة تماماً وتابع تقدمك لحظة بلحظة</div>
+    </div>
+    <div class="how-step">
+      <div class="step-circle">🏆</div>
+      <div class="step-title">تفوق وانضم للأوائل</div>
+      <div class="step-text">اجتاز الامتحانات، انضم للوحة الشرف، واحصل على شهادتك</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PRICING ══ -->
+<section class="section section-center" id="pricing" style="background:linear-gradient(180deg,transparent,rgba(0,180,216,.03),transparent)">
+  <div class="section-tag2">💰 الأسعار</div>
+  <h2 class="section-h2 reveal">اختار الباقة <span class="gradient-text">المناسبة لك</span></h2>
+  <div class="pricing-grid reveal">
+    <div class="price-card">
+      <div class="price-icon">📖</div>
+      <div class="price-name">حصة واحدة</div>
+      <div class="price-amount">25</div>
+      <div class="price-period">جنيه / الحصة</div>
+      <ul class="price-features">
+        <li>الوصول لحصة واحدة</li>
+        <li>مشاهدة لمدة أسبوع</li>
+        <li>الواجبات والامتحانات</li>
+        <li>دعم فني أساسي</li>
+      </ul>
+      <a href="auth.html" class="btn btn-outline w-full">ابدأ الآن</a>
+    </div>
+    <div class="price-card featured">
+      <div class="price-popular">الأكثر طلباً ⭐</div>
+      <div class="price-icon">📚</div>
+      <div class="price-name">الفصل الدراسي</div>
+      <div class="price-amount">150</div>
+      <div class="price-period">جنيه / الفصل كامل</div>
+      <ul class="price-features">
+        <li>كل حصص الفصل (24 حصة)</li>
+        <li>مشاهدة طول الفصل</li>
+        <li>جميع الامتحانات والواجبات</li>
+        <li>لوحة الشرف والشهادة</li>
+        <li>دعم فني أولوية</li>
+      </ul>
+      <a href="auth.html" class="btn btn-primary w-full">اشترك الآن</a>
+    </div>
+    <div class="price-card">
+      <div class="price-icon">🎯</div>
+      <div class="price-name">السنة كاملة</div>
+      <div class="price-amount">280</div>
+      <div class="price-period">جنيه / السنة كاملة</div>
+      <ul class="price-features">
+        <li>فصل أول + فصل ثاني</li>
+        <li>مراجعة نهائية شاملة</li>
+        <li>جميع المحتوى طول السنة</li>
+        <li>شهادة إتمام بلوكتشين</li>
+        <li>دعم فني VIP على الواتساب</li>
+        <li>توفير 50+ جنيه</li>
+      </ul>
+      <a href="auth.html" class="btn btn-outline w-full">اشترك الآن</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TEACHER ══ -->
+<section class="section teacher-section" id="teacher">
+  <div class="teacher-inner">
+    <div class="teacher-avatar-big">ص</div>
+    <div class="teacher-bio reveal">
+      <div class="teacher-name">أستاذ صالح حسين</div>
+      <div class="teacher-role">مدرس اللغة العربية المتميز</div>
+      <div class="teacher-text">
+        مدرس متخصص في اللغة العربية بأسلوب مبسط وممتع، يؤمن بأن كل طالب قادر على التفوق مع الطريقة الصحيحة.
+        أكثر من 4,200 طالب استفادوا من منهجه الفريد في شرح القواعد والنحو والبلاغة.
+      </div>
+      <div class="teacher-socials">
+        <a href="https://www.facebook.com/profile.php?id=61565586305379" target="_blank" class="social-chip">📘 Facebook (1)</a>
+        <a href="https://www.facebook.com/saleh.ahmed.581187" target="_blank" class="social-chip">📘 Facebook (2)</a>
+        <a href="https://www.instagram.com/salehelahmed16/" target="_blank" class="social-chip">📷 Instagram</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TESTIMONIALS ══ -->
+<section class="section">
+  <div class="section-tag2" style="display:block;text-align:center">❤️ آراء الطلاب</div>
+  <h2 class="section-h2 text-center reveal">الطلاب <span class="gradient-text">بيحكوا</span></h2>
+  <div class="testimonials reveal">
+    <div class="testi-card">
+      <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+      <div class="testi-text">"المنصة غيّرت طريقة مذاكرتي تماماً. الفيديوهات واضحة جداً والامتحانات بتساعدني أعرف نقاط ضعفي بسرعة!"</div>
+      <div class="testi-user">
+        <div class="avatar avatar-sm">ف</div>
+        <div><div class="name">فاطمة الزهراء</div><div class="meta">الأول الثانوي • القاهرة</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+      <div class="testi-text">"والله من أحسن المنصات اللي اتعلمت فيها. المستر بيشرح بأسلوب سهل ومفيش حاجة مش مفهومة أبداً."</div>
+      <div class="testi-user">
+        <div class="avatar avatar-sm">م</div>
+        <div><div class="name">محمد إبراهيم</div><div class="meta">الثاني الثانوي • الإسكندرية</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+      <div class="testi-text">"عملت امتحان الثانوية وجه الباب الأول من اللي اتعلمته هنا. شكراً يا مستر صالح ❤️"</div>
+      <div class="testi-user">
+        <div class="avatar avatar-sm">ن</div>
+        <div><div class="name">نور الهدى سعيد</div><div class="meta">الثالث الثانوي • الجيزة</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FAQ ══ -->
+<section class="section section-center" id="faq">
+  <div class="section-tag2">❓ أسئلة شائعة</div>
+  <h2 class="section-h2 reveal">إجابات <span class="gradient-text">لكل أسئلتك</span></h2>
+  <div class="faq-list reveal">
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">هل يمكنني مشاهدة الفيديوهات على أكثر من جهاز؟<span class="arrow">▾</span></div><div class="faq-a">يمكنك مشاهدة الفيديوهات على جهازين بحد أقصى. في حالة تغيير الجهاز يمكنك طلب النقل مرة واحدة كل 3 أشهر.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">هل يمكن تحميل الفيديوهات؟<span class="arrow">▾</span></div><div class="faq-a">لا، الفيديوهات مشفرة بالكامل ومحمية بتقنية DRM ولا يمكن تحميلها بأي طريقة لحماية حقوق المدرس.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">ما طرق الدفع المتاحة؟<span class="arrow">▾</span></div><div class="faq-a">فوري — فودافون كاش — بطاقات Visa وMastercard — تحويل بنكي — أكواد مطبوعة من المدرس.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">هل الامتحانات إلزامية؟<span class="arrow">▾</span></div><div class="faq-a">الامتحانات اختيارية إلا لو المدرس قرر إلزاميتها. هي مهمة لتقييم مستواك واكتشاف نقاط ضعفك.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">متى تنتهي صلاحية اشتراكي؟<span class="arrow">▾</span></div><div class="faq-a">اشتراك الفصل يستمر طول الفصل الدراسي. ستصلك تنبيهات قبل انتهاء الاشتراك بأسبوع.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">هل يوجد تطبيق موبايل؟<span class="arrow">▾</span></div><div class="faq-a">نعم، التطبيق متاح على Android وiOS مع دعم كامل لجميع الميزات وإشعارات فورية.</div></div>
+  </div>
+</section>
+
+<!-- ══ CTA ══ -->
+<section class="section cta-section">
+  <div class="cta-glow"></div>
+  <div class="section-tag2" style="position:relative">🎉 ابدأ رحلتك</div>
+  <h2 class="section-h2 reveal" style="position:relative">جاهز تبدأ؟<br><span class="gradient-text">سجّل دلوقتي مجاناً</span></h2>
+  <p class="section-sub reveal" style="position:relative;margin-bottom:36px">انضم لأكثر من 4,200 طالب بيتعلموا مع أستاذ صالح حسين</p>
+  <div style="display:flex;gap:14px;justify-content:center;position:relative" class="reveal">
+    <a href="auth.html" class="btn btn-primary btn-lg">🚀 إنشاء حساب مجاني</a>
+    <a href="student-dashboard.html" class="btn btn-outline btn-lg">👀 تجربة المنصة</a>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="name gradient-text">🎓 منصة أستاذ صالح حسين</div>
+      <div class="desc">منصة تعليمية متكاملة لتدريس اللغة العربية للمرحلة الثانوية. مبنية بأحدث تقنيات الويب لتوفير أفضل تجربة تعليمية.</div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <a href="https://www.facebook.com/profile.php?id=61565586305379" target="_blank" class="social-chip" style="font-size:.75rem;padding:6px 12px">📘</a>
+        <a href="https://www.instagram.com/salehelahmed16/" target="_blank" class="social-chip" style="font-size:.75rem;padding:6px 12px">📷</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>المنصة</h4>
+      <ul>
+        <li><a href="auth.html">تسجيل الدخول</a></li>
+        <li><a href="auth.html">إنشاء حساب</a></li>
+        <li><a href="student-dashboard.html">حساب الطالب</a></li>
+        <li><a href="admin-dashboard.html">لوحة المدرس</a></li>
+        <li><a href="video-player.html">مشغل الفيديو</a></li>
+        <li><a href="exam.html">الامتحانات</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>الدعم</h4>
+      <ul>
+        <li><a href="#faq">الأسئلة الشائعة</a></li>
+        <li><a href="#">تواصل معنا</a></li>
+        <li><a href="#">سياسة الخصوصية</a></li>
+        <li><a href="#">شروط الاستخدام</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>تواصل معنا</h4>
+      <ul>
+        <li><a href="#">📞 01012345678</a></li>
+        <li><a href="#">💬 واتساب</a></li>
+        <li><a href="https://www.facebook.com/profile.php?id=61565586305379" target="_blank">📘 فيسبوك</a></li>
+        <li><a href="https://www.instagram.com/salehelahmed16/" target="_blank">📷 إنستجرام</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2025 منصة أستاذ صالح حسين — جميع الحقوق محفوظة</div>
+    <div class="footer-dev-note">
+      صُنعت بـ ❤️ بواسطة
+      <a href="https://omarahameds2010-lab.github.io/omar-os/certificates.html" target="_blank">عمر أحمد</a>
+      | Software Engineer · Web Developer · Cybersecurity Enthusiast
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+// Sticky nav
+window.addEventListener('scroll', () => {
+  document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// Hero stat counters
+function startCounters() {
+  UI.animateValue(document.getElementById('hs1'), 0, 4200);
+  UI.animateValue(document.getElementById('hs2'), 0, 380);
+  UI.animateValue(document.getElementById('hs3'), 0, 15000);
+}
+setTimeout(startCounters, 600);
+
+// Stats strip counters
+const statsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.querySelectorAll('.ss-num').forEach(el => {
+      const target = parseInt(el.dataset.target);
+      UI.animateValue(el, 0, target, 1500);
+    });
+    statsObserver.unobserve(e.target);
+  });
+}, { threshold: 0.3 });
+const strip = document.querySelector('.stats-strip');
+if (strip) statsObserver.observe(strip);
+
+// Scroll reveal
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => { e.target.style.opacity='1'; e.target.style.transform='none'; }, i * 80);
+      revealObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => {
+  el.style.opacity = '0'; el.style.transform = 'translateY(32px)';
+  el.style.transition = 'all .7s cubic-bezier(.16,1,.3,1)';
+  revealObserver.observe(el);
+});
+
+// FAQ
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
+</body>
+</html>
